@@ -18,11 +18,13 @@
 
 using System.Linq;
 using Autofac;
-using BootStrapper;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Transformalize.Configuration;
+using Transformalize.Containers.Autofac;
 using Transformalize.Contracts;
+using Transformalize.Providers.Bogus.Autofac;
 using Transformalize.Providers.Console;
+using Transformalize.Providers.Solr.Autofac;
 
 namespace IntegrationTests {
 
@@ -51,7 +53,7 @@ namespace IntegrationTests {
   </entities>
 </add>";
             using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
 
                     var process = inner.Resolve<Process>();
 
@@ -82,7 +84,7 @@ namespace IntegrationTests {
   </entities>
 </add>";
             using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
 
                     var process = inner.Resolve<Process>();
 

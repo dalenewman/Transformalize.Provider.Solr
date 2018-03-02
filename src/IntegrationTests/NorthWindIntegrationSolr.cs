@@ -17,11 +17,10 @@
 #endregion
 
 using Autofac;
-using BootStrapper;
 using Dapper;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Transformalize.Configuration;
+using Transformalize.Containers.Autofac;
 using Transformalize.Contracts;
 using Transformalize.Providers.Console;
 using Transformalize.Providers.SqlServer;
@@ -46,7 +45,7 @@ namespace IntegrationTests {
         };
 
         [TestMethod]
-        [Ignore] // until SqlServer provider is plugin (or has it's own SqlServerModule)
+        [Ignore] // not tested yet
         public void Solr_Integration() {
 
             // CORRECT DATA AND INITIAL LOAD

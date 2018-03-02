@@ -8,8 +8,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BootStrapper", "src\BootStrapper\BootStrapper.csproj", "{4D7ACEA9-6E0A-4174-9551-894B0124357A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuget", "nuget", "{8FE1844F-26A4-47BE-9507-F0333D42FABE}"
 	ProjectSection(SolutionItems) = preProject
 		nuget\nuget.bat = nuget\nuget.bat
@@ -30,10 +28,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4D7ACEA9-6E0A-4174-9551-894B0124357A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D7ACEA9-6E0A-4174-9551-894B0124357A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D7ACEA9-6E0A-4174-9551-894B0124357A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D7ACEA9-6E0A-4174-9551-894B0124357A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4ED1E259-756A-40B8-9800-F563B59E0206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4ED1E259-756A-40B8-9800-F563B59E0206}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4ED1E259-756A-40B8-9800-F563B59E0206}.Release|Any CPU.ActiveCfg = Release|Any CPU
