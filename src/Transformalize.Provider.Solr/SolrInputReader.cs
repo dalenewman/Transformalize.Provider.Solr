@@ -28,8 +28,8 @@ using Transformalize.Contracts;
 namespace Transformalize.Providers.Solr {
     public class SolrInputReader : IRead {
 
-        const string PhrasePattern = @"\""(?>[^""]+|\""(?<number>)|\""(?<-number>))*(?(number)(?!))\""";
-        static readonly Regex _phraseRegex = new Regex(PhrasePattern, RegexOptions.Compiled);
+        private const string PhrasePattern = @"\""(?>[^""]+|\""(?<number>)|\""(?<-number>))*(?(number)(?!))\""";
+        private static readonly Regex PhraseRegex = new Regex(PhrasePattern, RegexOptions.Compiled);
 
         readonly ISolrReadOnlyOperations<Dictionary<string, object>> _solr;
         readonly InputContext _context;
@@ -77,7 +77,7 @@ namespace Transformalize.Providers.Solr {
                     if (filter.Field == string.Empty) {
                         filterQueries.Add(new SolrQuery(filter.Expression));
                     } else {
-                        if(filter.Value != "*") {
+                        if (filter.Value != "*") {
                             foreach (var term in Terms(filter.Value)) {
                                 queries.Add(new SolrQueryByField(filter.Field, term) { Quoted = false });
                             }
@@ -90,7 +90,7 @@ namespace Transformalize.Providers.Solr {
                         MinCount = filter.Min,
                         Limit = filter.Size
                     });
-                    if(filter.Value != "*") {
+                    if (filter.Value != "*") {
                         if (filter.Value.IndexOf(',') > 0) {
                             filterQueries.Add(new SolrQueryInList(filter.Field, filter.Value.Split(new[] { ',' })));
                         } else {
@@ -199,7 +199,9 @@ namespace Transformalize.Providers.Solr {
 
         private static IRow DocToRow(IRow row, Field[] fields, IReadOnlyDictionary<string, object> doc) {
             foreach (var field in fields) {
-                row[field] = doc[field.Name];
+                if (doc.ContainsKey(field.Name)) {
+                    row[field] = doc[field.Name];
+                }
             }
             return row;
         }
@@ -220,7 +222,7 @@ namespace Transformalize.Providers.Solr {
                 return processedValue.Split(delimiter.ToCharArray());
 
             var phrases = new List<string>();
-            foreach (var match in _phraseRegex.Matches(processedValue)) {
+            foreach (var match in PhraseRegex.Matches(processedValue)) {
                 phrases.Add(match.ToString());
                 processedValue = processedValue.Replace(match.ToString(), string.Empty).Trim(delimiter.ToCharArray());
             }

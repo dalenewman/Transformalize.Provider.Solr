@@ -22,8 +22,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Transformalize.Configuration;
 using Transformalize.Containers.Autofac;
 using Transformalize.Contracts;
+using Transformalize.Providers.Ado;
 using Transformalize.Providers.Console;
+using Transformalize.Providers.Solr.Autofac;
 using Transformalize.Providers.SqlServer;
+using Transformalize.Providers.SqlServer.Autofac;
 
 namespace IntegrationTests {
 
@@ -40,12 +43,15 @@ namespace IntegrationTests {
 
         public Connection OutputConnection { get; set; } = new Connection {
             Name = "output",
-            Provider = "Solr",
-            Folder = @"c:\temp\Solr_northwind"
+            Provider = "solr",
+            Folder = @"c:\java\solr-6.2.1\cores",
+            Core = "northwind",
+            Path = "solr",
+            Port = 8983
         };
 
         [TestMethod]
-        [Ignore] // not tested yet
+        //[Ignore] // not tested yet
         public void Solr_Integration() {
 
             // CORRECT DATA AND INITIAL LOAD
@@ -58,7 +64,7 @@ namespace IntegrationTests {
             }
 
             using (var outer = new ConfigurationContainer().CreateScope(TestFile + "?Mode=init")) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new SqlServerModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
                     var controller = inner.Resolve<IProcessController>();
                     controller.Execute();
                 }
@@ -70,7 +76,7 @@ namespace IntegrationTests {
 
             // FIRST DELTA, NO CHANGES
             using (var outer = new ConfigurationContainer().CreateScope(TestFile)) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new SqlServerModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
                     var controller = inner.Resolve<IProcessController>();
                     controller.Execute();
                 }
@@ -88,7 +94,7 @@ namespace IntegrationTests {
             }
 
             using (var outer = new ConfigurationContainer().CreateScope(TestFile)) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new SqlServerModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
                     var controller = inner.Resolve<IProcessController>();
                     controller.Execute();
                 }
@@ -116,7 +122,7 @@ namespace IntegrationTests {
             }
 
             using (var outer = new ConfigurationContainer().CreateScope(TestFile)) {
-                using (var inner = new TestContainer().CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+                using (var inner = new TestContainer(new SqlServerModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
                     var controller = inner.Resolve<IProcessController>();
                     controller.Execute();
                 }

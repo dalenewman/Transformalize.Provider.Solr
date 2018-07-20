@@ -1,16 +1,12 @@
-﻿<add name="NorthWind" enabled="true" mode="@(Mode)" environment="prod">
+﻿<add name="NorthWind" mode="@[Mode]" >
 
-  <environments>
-    <add name="prod">
-      <parameters>
-        <add name="Mode" value="default" />
-      </parameters>
-    </add>
-  </environments>
+  <parameters>
+    <add name="Mode" value="default" />
+  </parameters>
 
   <connections>
     <add name="input" provider="sqlserver" server="localhost" database="NorthWind" />
-    <add name="output" provider="solr"  folder="c:\temp\Solr_northwind" />
+    <add name="output" provider="solr" server="localhost" core="northwind" folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
   </connections>
 
   <maps>

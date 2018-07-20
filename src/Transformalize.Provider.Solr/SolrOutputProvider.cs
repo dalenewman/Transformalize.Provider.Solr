@@ -67,14 +67,14 @@ namespace Transformalize.Providers.Solr {
         public int GetNextTflBatchId() {
             // query and set Context.Entity.BatchId (max of TflBatchId)
             var batchIdField = _context.Entity.TflBatchId();
-            var batchId = _solr.GetMaxValue(batchIdField.Alias);
+            var batchId = _solr.GetMaxValue(batchIdField.Alias.ToLower());
             return batchId != null ? Convert.ToInt32(batchId) + 1 : 0;
         }
 
         public int GetMaxTflKey() {
             // query and set Context.Entity.Identity (max of Identity)
             var identityField = _context.Entity.TflKey();
-            var identity = _solr.GetMaxValue(identityField.Alias);
+            var identity = _solr.GetMaxValue(identityField.Alias.ToLower());
             return identity != null ? Convert.ToInt32(identity) : 0;
 
         }
