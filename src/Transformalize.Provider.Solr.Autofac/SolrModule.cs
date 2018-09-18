@@ -43,6 +43,7 @@ using Transformalize.Providers.Solr.Ext;
 
 namespace Transformalize.Providers.Solr.Autofac {
     public class SolrModule : Module {
+        private const string SOLR = "solr";
 
         protected override void Load(ContainerBuilder builder) {
 
@@ -84,7 +85,7 @@ namespace Transformalize.Providers.Solr.Autofac {
 
 
             // connections
-            foreach (var connection in process.Connections.Where(c => c.Provider.In("solr"))) {
+            foreach (var connection in process.Connections.Where(c => c.Provider.In(SOLR))) {
 
                 connection.Url = connection.BuildSolrUrl();
                 RegisterCore(builder, connection);
@@ -97,12 +98,12 @@ namespace Transformalize.Providers.Solr.Autofac {
             }
 
             // entity input
-            foreach (var entity in process.Entities.Where(e => process.Connections.First(c => c.Name == e.Connection).Provider == "solr")) {
+            foreach (var entity in process.Entities.Where(e => process.Connections.First(c => c.Name == e.Connection).Provider == SOLR)) {
 
                 builder.Register<IInputProvider>(ctx => {
                     var input = ctx.ResolveNamed<InputContext>(entity.Key);
                     switch (input.Connection.Provider) {
-                        case "solr":
+                        case SOLR:
                             return new SolrInputProvider(input, ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key));
                         default:
                             return new NullInputProvider();
@@ -115,7 +116,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                     var rowFactory = ctx.ResolveNamed<IRowFactory>(entity.Key, new NamedParameter("capacity", input.RowCapacity));
 
                     switch (input.Connection.Provider) {
-                        case "solr":
+                        case SOLR:
                             var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key);
                             return new SolrInputReader(solr, input, input.InputFields, rowFactory);
                         default:
@@ -126,7 +127,7 @@ namespace Transformalize.Providers.Solr.Autofac {
             }
 
             // entity output
-            if (process.Output().Provider == "solr") {
+            if (process.Output().Provider == SOLR) {
 
                 // PROCESS OUTPUT CONTROLLER
                 builder.Register<IOutputController>(ctx => new NullOutputController()).As<IOutputController>();
@@ -161,7 +162,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                         var output = ctx.ResolveNamed<OutputContext>(entity.Key);
 
                         switch (output.Connection.Provider) {
-                            case "solr":
+                            case SOLR:
                                 var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(output.Connection.Key);
 
                                 var initializer = process.Mode == "init" ? (IInitializer)new SolrInitializer(
@@ -189,7 +190,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                         var output = ctx.ResolveNamed<OutputContext>(entity.Key);
 
                         switch (output.Connection.Provider) {
-                            case "solr":
+                            case SOLR:
                                 return new SolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
                             default:
                                 return new NullWriter(output);
@@ -207,39 +208,39 @@ namespace Transformalize.Providers.Solr.Autofac {
             var url = connection.Url;
             var key = connection.Key;
 
-            builder.Register((ctx => new SolrConnection(url))).Named<ISolrConnection>(key);
+            builder.Register((ctx => new SolrConnection(url))).Named<ISolrConnection>(key).InstancePerLifetimeScope();
 
             builder.RegisterType<SolrQueryExecuter<Dictionary<string, object>>>()
                 .Named<ISolrQueryExecuter<Dictionary<string, object>>>(key)
                 .WithParameters(new[] {
                     new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed(key, typeof (ISolrConnection))),
-            });
+            }).InstancePerLifetimeScope();
 
             builder.RegisterType<SolrBasicServer<Dictionary<string, object>>>()
                 .Named<ISolrBasicOperations<Dictionary<string, object>>>(key)
                 .WithParameters(new[] {
                     new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed<ISolrConnection>(key)),
                     new ResolvedParameter((p, c) => p.Name == "queryExecuter", (p, c) => c.ResolveNamed<ISolrQueryExecuter<Dictionary<string,object>>>(connection.Key))
-                });
+                }).InstancePerLifetimeScope();
 
             builder.RegisterType<SolrBasicServer<Dictionary<string, object>>>()
                 .Named<ISolrBasicReadOnlyOperations<Dictionary<string, object>>>(key)
                 .WithParameters(new[] {
                     new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed<ISolrConnection>(key)),
                     new ResolvedParameter((p, c) => p.Name == "queryExecuter", (p, c) => c.ResolveNamed<ISolrQueryExecuter<Dictionary<string,object>>>(key))
-                });
+                }).InstancePerLifetimeScope();
 
             builder.RegisterType<SolrServer<Dictionary<string, object>>>()
                 .Named<ISolrOperations<Dictionary<string, object>>>(key)
                 .WithParameters(new[] {
                     new ResolvedParameter((p, c) => p.Name == "basicServer", (p, c) => c.ResolveNamed<ISolrBasicOperations<Dictionary<string,object>>>(key)),
-                });
+                }).InstancePerLifetimeScope();
 
             builder.RegisterType<SolrServer<Dictionary<string, object>>>()
                 .Named<ISolrReadOnlyOperations<Dictionary<string, object>>>(key)
                 .WithParameters(new[] {
                     new ResolvedParameter((p, c) => p.Name == "basicServer", (p, c) => c.ResolveNamed<ISolrBasicOperations<Dictionary<string,object>>>(key)),
-                });
+                }).InstancePerLifetimeScope();
 
             // modified url to not include the core
             builder.RegisterType<SolrCoreAdmin>()
@@ -249,7 +250,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                     new ResolvedParameter((p, c)=> p.Name == "headerParser", (p, c) => c.Resolve<ISolrHeaderResponseParser>()),
                     new ResolvedParameter((p, c)=> p.Name == "resultParser", (p, c) => new SolrStatusResponseParser())
                 })
-                .As<ISolrCoreAdmin>();
+                .As<ISolrCoreAdmin>().InstancePerLifetimeScope();
         }
     }
 }

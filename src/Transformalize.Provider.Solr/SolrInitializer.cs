@@ -82,7 +82,7 @@ namespace Transformalize.Providers.Solr {
             }
 
             _solr.Delete(SolrQuery.All);
-            _solr.Commit();
+            // _solr.Commit();  /* wait until after writing the new records */
 
             return new ActionResponse();
         }

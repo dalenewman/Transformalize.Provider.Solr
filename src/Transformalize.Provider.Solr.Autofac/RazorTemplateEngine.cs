@@ -16,14 +16,14 @@
 // limitations under the License.
 #endregion
 
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
 using Cfg.Net.Contracts;
 using RazorEngine;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 using RazorEngine.Text;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.Linq;
 using Transformalize.Contracts;
 
 namespace Transformalize.Providers.Solr.Autofac {
@@ -80,14 +80,11 @@ namespace Transformalize.Providers.Solr.Autofac {
 
             try {
                 _context.Debug(() => $"Compiling {_template.Name}.");
-                return _service.RunCompile(templateContent, _template.Name, null, new {
-                    _context.Process,
-                    Parameters = parameters
-                });
+                return _service.RunCompile(templateContent, _template.Name, typeof(SolrTemplateModel), new SolrTemplateModel { Process = _context.Process, Parameters = parameters });
             } catch (TemplateCompilationException ex) {
                 _context.Error($"Error parsing template {_template.Name}.");
                 _context.Error($"There are {ex.CompilerErrors.Count} errors.");
-                foreach(var error in ex.CompilerErrors) {
+                foreach (var error in ex.CompilerErrors) {
                     _context.Error(error.ErrorText);
                 }
                 Utility.CodeToError(_context, ex.SourceCode);
