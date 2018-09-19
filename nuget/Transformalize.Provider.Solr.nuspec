@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr</id>
-    <version>0.3.8-beta</version>
+    <version>0.3.10-beta</version>
     <title>Transformalize Transform using SOLR</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
@@ -10,17 +10,18 @@
     <projectUrl>https://github.com/dalenewman/Transformalize.Provider.Solr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Transformalize Transform using SOLR</description>
-    <releaseNotes>switch to strong type in razor template</releaseNotes>
+    <releaseNotes>bring solrnet into solution to allow for .net 4.5.2 and solr 7.*</releaseNotes>
     <copyright>Copyright 2018</copyright>
     <tags>etl</tags>
     <dependencies>
       <group targetFramework="net452">
         <dependency id="Transformalize" version="0.3.7-beta" />
-        <dependency id="SolrNet" version="0.5.0.1001" />
       </group>
     </dependencies>
   </metadata>
   <files>
     <file src="..\src\Transformalize.Provider.Solr\bin\Release\Transformalize.Provider.Solr.dll" target="lib\net452\Transformalize.Provider.Solr.dll" />
+    <file src="..\src\SolrNet-0.5.1\HttpWebAdapters\bin\Release\HttpWebAdapters.dll" target="lib\net452\HttpWebAdapters.dll" />
+    <file src="..\src\SolrNet-0.5.1\SolrNet\bin\Release\SolrNet.dll" target="lib\net452\SolrNet.dll" />
   </files>
 </package>

@@ -1,6 +1,6 @@
 ### Overview
 
-This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet).  It is a plug-in compatible with Transformalize 0.3.3-beta.
+This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet).  It is a plug-in compatible with Transformalize 0.3.7-beta.  This is tested on SOLR 6.2.1 and SOLR 7.4.0.
 
 Build the Autofac project and put it's output into Transformalize's *plugins* folder.
 

@@ -22,6 +22,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Transformalize.Provider.Sol
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "src\IntegrationTests\IntegrationTests.csproj", "{058FAE31-0608-48F8-84E4-04C3398689C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolrNet", "src\SolrNet-0.5.1\SolrNet\SolrNet.csproj", "{CEEB8690-3E08-4440-B647-787A58E71CFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpWebAdapters", "src\SolrNet-0.5.1\HttpWebAdapters\HttpWebAdapters.csproj", "{AE7D2A46-3F67-4986-B04B-7DCE79A549A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +44,14 @@ Global
 		{058FAE31-0608-48F8-84E4-04C3398689C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{058FAE31-0608-48F8-84E4-04C3398689C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{058FAE31-0608-48F8-84E4-04C3398689C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CEEB8690-3E08-4440-B647-787A58E71CFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEEB8690-3E08-4440-B647-787A58E71CFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEEB8690-3E08-4440-B647-787A58E71CFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEEB8690-3E08-4440-B647-787A58E71CFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE7D2A46-3F67-4986-B04B-7DCE79A549A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE7D2A46-3F67-4986-B04B-7DCE79A549A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE7D2A46-3F67-4986-B04B-7DCE79A549A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE7D2A46-3F67-4986-B04B-7DCE79A549A5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -91,7 +91,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                 RegisterCore(builder, connection);
 
                 builder.Register<ISchemaReader>(ctx => {
-                    Startup.Init<Dictionary<string, object>>(connection.Url);
+                    
                     var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(connection.Key);
                     return new SolrSchemaReader(connection, solr);
                 }).Named<ISchemaReader>(connection.Key);

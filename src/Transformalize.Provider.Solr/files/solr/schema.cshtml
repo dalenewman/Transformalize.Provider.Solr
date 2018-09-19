@@ -4,7 +4,7 @@
 @{
     var process = Model.Process;
     var fields = process.GetSearchFields();
-    var primaryKey = process.Entities.First(e => e.IsMaster).GetPrimaryKey().First().Alias.ToLower();
+    var primaryKey = process.Entities.First(e => e.IsMaster).GetPrimaryKey().First();
 }
 <schema name="example" version="1.5">
 
@@ -20,7 +20,7 @@
                    required="@(field.Alias.ToLower() == "tflkey" ? "true" : "false")" />
         }
         <field name="_version_" stored="true" indexed="true" type="long" />
-        <field name="_root_" type="string" indexed="true" stored="false" />
+        <field name="_root_" type="@(primaryKey.Type)" indexed="true" stored="false" />
         <!-- for default configuration that uses text as default field -->
         @if (!fields.Any(f => f.Alias.Equals("text"))) {
             <field name="text" type="string" indexed="true" stored="true" required="false" />
@@ -28,7 +28,7 @@
 
     </fields>
 
-    <uniqueKey>@(primaryKey)</uniqueKey>
+    <uniqueKey>@(primaryKey.Alias.ToLower())</uniqueKey>
 
     <types>
 
@@ -65,6 +65,11 @@
         <fieldtype name="byte[]" class="solr.BinaryField" />
         <fieldtype name="rowversion" class="solr.BinaryField" />
         <fieldtype name="binary" class="solr.BinaryField" />
+
+        <!-- Solr 7 -->
+        <!--<fieldType name="pdates" class="solr.DatePointField" docValues="true" multiValued="true" />
+        <fieldType name="plongs" class="solr.LongPointField" docValues="true" multiValued="true" />
+        <fieldType name="pdoubles" class="solr.DoublePointField" docValues="true" multiValued="true" />-->
 
         <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
             <analyzer>

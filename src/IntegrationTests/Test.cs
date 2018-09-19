@@ -32,7 +32,75 @@ namespace IntegrationTests {
     public class Test {
 
         [TestMethod]
-        public void Write() {
+        public void Write740() {
+            const string xml = @"<add name='TestProcess' mode='init'>
+  <parameters>
+    <add name='Size' type='int' value='1000' />
+  </parameters>
+  <connections>
+    <add name='input' provider='bogus' seed='1' />
+    <add name='output' provider='solr' core='bogus' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+  </connections>
+  <entities>
+    <add name='Contact' size='@[Size]'>
+      <fields>
+        <add name='FirstName' />
+        <add name='LastName' />
+        <add name='Stars' type='byte' min='1' max='5' />
+        <add name='Reviewers' type='int' min='0' max='500' />
+      </fields>
+    </add>
+  </entities>
+</add>";
+            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
+                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+
+                    var process = inner.Resolve<Process>();
+
+                    var controller = inner.Resolve<IProcessController>();
+                    controller.Execute();
+
+                    Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Read740() {
+            const string xml = @"<add name='TestProcess'>
+  <connections>
+    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+    <add name='output' provider='internal' />
+  </connections>
+  <entities>
+    <add name='Contact'>
+      <fields>
+        <add name='firstname' />
+        <add name='lastname' />
+        <add name='stars' type='byte' />
+        <add name='reviewers' type='int' />
+      </fields>
+    </add>
+  </entities>
+</add>";
+            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
+                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+
+                    var process = inner.Resolve<Process>();
+
+                    var controller = inner.Resolve<IProcessController>();
+                    controller.Execute();
+                    var rows = process.Entities.First().Rows;
+
+                    Assert.AreEqual(1000, rows.Count);
+
+
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Write621() {
             const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
     <add name='Size' type='int' value='1000' />
@@ -66,7 +134,7 @@ namespace IntegrationTests {
         }
 
         [TestMethod]
-        public void Read() {
+        public void Read621() {
             const string xml = @"<add name='TestProcess'>
   <connections>
     <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />

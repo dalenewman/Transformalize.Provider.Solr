@@ -6,7 +6,7 @@
 
   <connections>
     <add name="input" provider="sqlserver" server="localhost" database="NorthWind" />
-    <add name="output" provider="solr" server="localhost" core="northwind" folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name="output" provider="solr" server="localhost" core="northwind" folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
   </connections>
 
   <maps>
