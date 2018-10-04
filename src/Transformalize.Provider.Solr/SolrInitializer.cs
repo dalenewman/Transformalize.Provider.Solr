@@ -1,7 +1,7 @@
 ﻿#region license
 // Transformalize
 // Configurable Extract, Transform, and Load
-// Copyright 2013-2017 Dale Newman
+// Copyright 2013-2018 Dale Newman
 //  
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@
 #region license
 #endregion
 
+using SolrNet;
+using SolrNet.Exceptions;
+using SolrNet.Impl;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SolrNet;
-using SolrNet.Exceptions;
-using SolrNet.Impl;
 using Transformalize.Actions;
 using Transformalize.Context;
 using Transformalize.Contracts;
@@ -58,18 +58,28 @@ namespace Transformalize.Providers.Solr {
             var coreFolder = new DirectoryInfo(Path.Combine(_context.Connection.Folder, _context.Connection.Core));
 
             if (!coreFolder.Exists) {
-                coreFolder.Create();
-            }
-            // https://stackoverflow.com/questions/58744/copy-the-entire-contents-of-a-directory-in-c-sharp
-            var sourceFolder = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "files\\solr"));
-            foreach (var d in Directory.GetDirectories(sourceFolder.FullName, "*", SearchOption.AllDirectories)) {
-                Directory.CreateDirectory(d.Replace(sourceFolder.FullName, coreFolder.FullName));
-            }
-            foreach (var f in Directory.GetFiles(sourceFolder.FullName, "*.*", SearchOption.AllDirectories)) {
-                File.Copy(f, f.Replace(sourceFolder.FullName, coreFolder.FullName), true);
+                try {
+                    coreFolder.Create();
+                } catch (UnauthorizedAccessException ex) {
+                    _context.Warn("Unable to create core folder: {0}", ex.Message);
+                }
             }
 
-            File.WriteAllText(Path.Combine(Path.Combine(coreFolder.FullName, "conf"), "schema.xml"), _engine.Render());
+            // https://stackoverflow.com/questions/58744/copy-the-entire-contents-of-a-directory-in-c-sharp
+            var sourceFolder = new DirectoryInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "files\\solr"));
+
+            try {
+                foreach (var d in Directory.GetDirectories(sourceFolder.FullName, "*", SearchOption.AllDirectories)) {
+                    Directory.CreateDirectory(d.Replace(sourceFolder.FullName, coreFolder.FullName));
+                }
+                foreach (var f in Directory.GetFiles(sourceFolder.FullName, "*.*", SearchOption.AllDirectories)) {
+                    File.Copy(f, f.Replace(sourceFolder.FullName, coreFolder.FullName), true);
+                }
+
+                File.WriteAllText(Path.Combine(Path.Combine(coreFolder.FullName, "conf"), "schema.xml"), _engine.Render());
+            } catch (UnauthorizedAccessException ex) {
+                _context.Warn("Unable to transfer configuration files to core folder: {0}", ex.Message);
+            }
 
             if (cores.Any(c => c.Name == _context.Connection.Core)) {
                 _admin.Reload(_context.Connection.Core);

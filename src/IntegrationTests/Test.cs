@@ -39,7 +39,7 @@ namespace IntegrationTests {
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]'>
@@ -69,7 +69,7 @@ namespace IntegrationTests {
         public void Read740() {
             const string xml = @"<add name='TestProcess'>
   <connections>
-    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
