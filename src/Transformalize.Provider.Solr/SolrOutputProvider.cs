@@ -15,10 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
-using System;
-using System.Collections.Generic;
 using SolrNet;
 using SolrNet.Commands.Parameters;
+using System;
+using System.Collections.Generic;
 using Transformalize.Context;
 using Transformalize.Contracts;
 using Transformalize.Providers.Solr.Ext;
@@ -35,6 +35,9 @@ namespace Transformalize.Providers.Solr {
         }
 
         public object GetMaxVersion() {
+            if (_context.Process.Mode == "init")
+                return null;
+
             if (string.IsNullOrEmpty(_context.Entity.Version))
                 return null;
 

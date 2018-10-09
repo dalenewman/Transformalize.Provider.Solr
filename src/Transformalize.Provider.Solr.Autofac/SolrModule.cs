@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using Autofac.Core;
-using Cfg.Net.Contracts;
 using Cfg.Net.Reader;
 using SolrNet;
 using SolrNet.Impl;
@@ -43,7 +42,8 @@ using Transformalize.Providers.Solr.Ext;
 
 namespace Transformalize.Providers.Solr.Autofac {
     public class SolrModule : Module {
-        private const string SOLR = "solr";
+
+        private const string Solr = "solr";
 
         protected override void Load(ContainerBuilder builder) {
 
@@ -85,7 +85,7 @@ namespace Transformalize.Providers.Solr.Autofac {
 
 
             // connections
-            foreach (var connection in process.Connections.Where(c => c.Provider.In(SOLR))) {
+            foreach (var connection in process.Connections.Where(c => c.Provider.In(Solr))) {
 
                 connection.Url = connection.BuildSolrUrl();
                 RegisterCore(builder, connection);
@@ -98,12 +98,12 @@ namespace Transformalize.Providers.Solr.Autofac {
             }
 
             // entity input
-            foreach (var entity in process.Entities.Where(e => process.Connections.First(c => c.Name == e.Connection).Provider == SOLR)) {
+            foreach (var entity in process.Entities.Where(e => process.Connections.First(c => c.Name == e.Connection).Provider == Solr)) {
 
                 builder.Register<IInputProvider>(ctx => {
                     var input = ctx.ResolveNamed<InputContext>(entity.Key);
                     switch (input.Connection.Provider) {
-                        case SOLR:
+                        case Solr:
                             return new SolrInputProvider(input, ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key));
                         default:
                             return new NullInputProvider();
@@ -116,7 +116,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                     var rowFactory = ctx.ResolveNamed<IRowFactory>(entity.Key, new NamedParameter("capacity", input.RowCapacity));
 
                     switch (input.Connection.Provider) {
-                        case SOLR:
+                        case Solr:
                             var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key);
                             return new SolrInputReader(solr, input, input.InputFields, rowFactory);
                         default:
@@ -127,7 +127,7 @@ namespace Transformalize.Providers.Solr.Autofac {
             }
 
             // entity output
-            if (process.Output().Provider == SOLR) {
+            if (process.Output().Provider == Solr) {
 
                 // PROCESS OUTPUT CONTROLLER
                 builder.Register<IOutputController>(ctx => new NullOutputController()).As<IOutputController>();
@@ -162,7 +162,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                         var output = ctx.ResolveNamed<OutputContext>(entity.Key);
 
                         switch (output.Connection.Provider) {
-                            case SOLR:
+                            case Solr:
                                 var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(output.Connection.Key);
 
                                 var initializer = process.Mode == "init" ? (IInitializer)new SolrInitializer(
@@ -190,7 +190,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                         var output = ctx.ResolveNamed<OutputContext>(entity.Key);
 
                         switch (output.Connection.Provider) {
-                            case SOLR:
+                            case Solr:
                                 return new SolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
                             default:
                                 return new NullWriter(output);

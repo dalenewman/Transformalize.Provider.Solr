@@ -32,14 +32,14 @@ namespace IntegrationTests {
     public class Test {
 
         [TestMethod]
-        public void Write740() {
+        public void Write750() {
             const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
     <add name='Size' type='int' value='1000' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.5.0-10duke231008\cores' path='solr' port='8984' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]'>
@@ -66,10 +66,10 @@ namespace IntegrationTests {
         }
 
         [TestMethod]
-        public void Read740() {
+        public void Read750() {
             const string xml = @"<add name='TestProcess'>
   <connections>
-    <add name='input' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.4.0\cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' server='localhost' folder='c:\java\solr-7.5.0-10duke231008\cores' path='solr' port='8984' />
     <add name='output' provider='internal' />
   </connections>
   <entities>

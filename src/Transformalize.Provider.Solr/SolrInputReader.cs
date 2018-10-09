@@ -32,11 +32,11 @@ namespace Transformalize.Providers.Solr {
         private static readonly Regex PhraseRegex = new Regex(PhrasePattern, RegexOptions.Compiled);
 
         readonly ISolrReadOnlyOperations<Dictionary<string, object>> _solr;
-        readonly InputContext _context;
-        int _localCount;
-        readonly Collection<string> _fieldNames;
-        readonly Field[] _fields;
-        readonly IRowFactory _rowFactory;
+        private readonly InputContext _context;
+        private int _localCount;
+        private readonly Collection<string> _fieldNames;
+        private readonly Field[] _fields;
+        private readonly IRowFactory _rowFactory;
 
         public SolrInputReader(
             ISolrReadOnlyOperations<Dictionary<string, object>> solr,
@@ -54,7 +54,7 @@ namespace Transformalize.Providers.Solr {
 
         public IEnumerable<IRow> Read() {
 
-            AbstractSolrQuery query = SolrQuery.All;
+            var query = SolrQuery.All;
             var filterQueries = new Collection<ISolrQuery>();
             var facetQueries = new Collection<ISolrFacetQuery>();
 
@@ -112,8 +112,7 @@ namespace Transformalize.Providers.Solr {
 
             var sortOrder = new Collection<SortOrder>();
             foreach (var orderBy in _context.Entity.Order) {
-                Field field;
-                if (_context.Entity.TryGetField(orderBy.Field, out field)) {
+                if (_context.Entity.TryGetField(orderBy.Field, out var field)) {
                     var name = field.SortField.ToLower();
                     sortOrder.Add(new SortOrder(name, orderBy.Sort == "asc" ? SolrNet.Order.ASC : SolrNet.Order.DESC));
                 }
