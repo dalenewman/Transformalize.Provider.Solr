@@ -30,9 +30,12 @@
         @if (!fields.Any(f => f.Alias.Equals("text"))) {
             <field name="text" type="string" indexed="true" stored="true" required="false" />
         }
-        
-        <!--<dynamicField name="*_l_ns" type="plong" indexed="true" stored="false" />
-        <dynamicField name="*_s_ns" type="string" indexed="true" stored="false" />-->
+
+
+        @if (version >= 7) {
+            <dynamicField name="*_l_ns" type="tlong" indexed="true" stored="false" />
+            <dynamicField name="*_s_ns" type="string" indexed="true" stored="false" />
+        }
 
     </fields>
 
@@ -302,13 +305,20 @@
 
         <fieldtype name="ignored" stored="false" indexed="false" multiValued="true" class="solr.StrField" />
         <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d" />
-        <!--<fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate" />-->
+
+        @if (version >= 7) {
         <fieldType name="location" class="solr.LatLonPointSpatialField" />
+        } else {
+            <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate" />
+        }
 
         <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" geo="true" distErrPct="0.025" maxDistErr="0.000009" distanceUnits="degrees" />
-        <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" />
-        <!--<fieldType name="currency" class="solr.CurrencyFieldType" amountLongSuffix="_l_ns" codeStrSuffix="_s_ns" defaultCurrency="USD" currencyConfig="currency.xml" />-->
 
+        @if (version >= 7) {
+            <fieldType name="currency" class="solr.CurrencyFieldType" amountLongSuffix="_l_ns" codeStrSuffix="_s_ns" defaultCurrency="USD" currencyConfig="currency.xml" />
+        } else {
+            <fieldType name="currency" class="solr.CurrencyField" precisionStep="8" defaultCurrency="USD" currencyConfig="currency.xml" />
+        }
     </types>
 
 </schema>
