@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr.Autofac</id>
-    <version>0.3.13-beta</version>
+    <version>0.3.14-beta</version>
     <title>Transformalize Transform using Solr Autofac Module</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>

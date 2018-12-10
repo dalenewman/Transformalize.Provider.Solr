@@ -92,7 +92,6 @@
 
 if exist %25f%25 copy /Y "$(TargetDir)RazorEngine.dll" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)SolrNet.dll" "%25f%25"
-if exist %25f%25 copy /Y "$(TargetDir)System.ValueTuple.dll" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)System.Web.Razor.dll" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.dll" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.Autofac.dll" "%25f%25"</PostBuildEvent>

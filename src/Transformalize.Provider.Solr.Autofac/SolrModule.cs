@@ -83,6 +83,13 @@ namespace Transformalize.Providers.Solr.Autofac {
             builder.RegisterType<SolrDictionarySerializer>().As<ISolrDocumentSerializer<Dictionary<string, object>>>();
             builder.RegisterType<SolrDictionaryDocumentResponseParser>().As<ISolrDocumentResponseParser<Dictionary<string, object>>>();
 
+            //MAPS
+            foreach (var map in process.Maps.Where(m => m.Connection != string.Empty && m.Query != string.Empty)) {
+                var connection = process.Connections.First(c => c.Name == map.Connection);
+                if (connection != null && connection.Provider == Solr) {
+                    builder.Register<IMapReader>(ctx => new DefaultMapReader()).Named<IMapReader>(map.Name);
+                }
+            }
 
             // connections
             foreach (var connection in process.Connections.Where(c => c.Provider.In(Solr))) {
