@@ -2,14 +2,14 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr</id>
-    <version>0.3.25-beta</version>
+    <version>0.3.26-beta</version>
     <title>Transformalize Transform using SOLR</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
     <projectUrl>https://github.com/dalenewman/Transformalize.Provider.Solr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Transformalize Transform using SOLR</description>
-    <releaseNotes>fixed cursor based paging</releaseNotes>
+    <releaseNotes>fixed cursor based paging, added break to avoid infinite loop</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>etl</tags>
     <dependencies>

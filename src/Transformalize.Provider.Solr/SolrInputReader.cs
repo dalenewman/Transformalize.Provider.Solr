@@ -141,7 +141,7 @@ namespace Transformalize.Providers.Solr {
             var readSize = _context.Entity.ReadSize > 0 ? _context.Entity.ReadSize : 500;
             var version = SolrVersionParser.ParseVersion(_context);
 
-            // using the cursor is more efficient then just paging through, so we do it if the version is greatest enough
+            // using the cursor is twice as fast
             if (version.Major > 4 || version.Major == 4 && version.Minor >= 7) {
 
                 string uniqueKey;
@@ -186,6 +186,7 @@ namespace Transformalize.Providers.Solr {
                 }
 
                 while (counter < part.NumFound) {
+
                     part = _solr.Query(
                         query,
                         new QueryOptions {
@@ -197,6 +198,10 @@ namespace Transformalize.Providers.Solr {
                             Facet = new FacetParameters { Queries = facetQueries, Sort = false }
                         }
                     );
+
+                    if (part.Count == 0) {
+                        break;
+                    }
 
                     foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
                         ++counter;

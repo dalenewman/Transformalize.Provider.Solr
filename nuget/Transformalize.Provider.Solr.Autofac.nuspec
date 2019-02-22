@@ -2,20 +2,20 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr.Autofac</id>
-    <version>0.3.25-beta</version>
+    <version>0.3.26-beta</version>
     <title>Transformalize Transform using Solr Autofac Module</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
     <projectUrl>https://github.com/dalenewman/Transformalize.Provider.Solr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Transformalize Transform using Solr Autofac Module</description>
-    <releaseNotes>fixed cursor based paging</releaseNotes>
+    <releaseNotes>fixed cursor based paging, added break to avoid infinite loop</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>etl</tags>
     <dependencies>
       <group targetFramework="net462">
         <dependency id="Autofac" version="4.6.2" />
-        <dependency id="Transformalize.Provider.Solr" version="0.3.25-beta" />
+        <dependency id="Transformalize.Provider.Solr" version="0.3.26-beta" />
         <dependency id="RazorEngine" version="3.10.0" />
         <dependency id="Cfg-NET.Reader" version="0.3.3" />
       </group>
