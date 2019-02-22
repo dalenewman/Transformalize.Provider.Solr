@@ -15,15 +15,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
+
+using SolrNet;
+using SolrNet.Commands.Parameters;
+using SolrNet.Impl;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
-using SolrNet;
-using SolrNet.Commands.Parameters;
 using Transformalize.Configuration;
 using Transformalize.Context;
 using Transformalize.Contracts;
+using Order = SolrNet.Order;
 
 namespace Transformalize.Providers.Solr {
     public class SolrInputReader : IRead {
@@ -31,9 +34,8 @@ namespace Transformalize.Providers.Solr {
         private const string PhrasePattern = @"\""(?>[^""]+|\""(?<number>)|\""(?<-number>))*(?(number)(?!))\""";
         private static readonly Regex PhraseRegex = new Regex(PhrasePattern, RegexOptions.Compiled);
 
-        readonly ISolrReadOnlyOperations<Dictionary<string, object>> _solr;
+        private readonly ISolrReadOnlyOperations<Dictionary<string, object>> _solr;
         private readonly InputContext _context;
-        private int _localCount;
         private readonly Collection<string> _fieldNames;
         private readonly Field[] _fields;
         private readonly IRowFactory _rowFactory;
@@ -48,12 +50,12 @@ namespace Transformalize.Providers.Solr {
             _context = context;
             _fields = fields;
             _rowFactory = rowFactory;
-            _localCount = 0;
             _fieldNames = new Collection<string>(fields.Select(f => f.Name).ToList());
         }
 
         public IEnumerable<IRow> Read() {
 
+            int counter = 0;
             var query = SolrQuery.All;
             var filterQueries = new Collection<ISolrQuery>();
             var facetQueries = new Collection<ISolrFacetQuery>();
@@ -100,64 +102,24 @@ namespace Transformalize.Providers.Solr {
                 }
             }
 
-            int rows;
-            StartOrCursor startOrCursor;
-            if (_context.Entity.IsPageRequest()) {
-                rows = _context.Entity.Size;
-                startOrCursor = new StartOrCursor.Start((_context.Entity.Page * _context.Entity.Size) - _context.Entity.Size);
-            } else {
-                rows = _context.Entity.ReadSize > 0 ? _context.Entity.ReadSize : _solr.Query(query, new QueryOptions { StartOrCursor = new StartOrCursor.Start(0), Rows = 0 }).NumFound;
-                startOrCursor = _context.Entity.ReadSize == 0 ? (StartOrCursor)new StartOrCursor.Start(0) : StartOrCursor.Cursor.Start;
-            }
-
             var sortOrder = new Collection<SortOrder>();
-            foreach (var orderBy in _context.Entity.Order) {
-                if (_context.Entity.TryGetField(orderBy.Field, out var field)) {
-                    var name = field.SortField.ToLower();
-                    sortOrder.Add(new SortOrder(name, orderBy.Sort == "asc" ? SolrNet.Order.ASC : SolrNet.Order.DESC));
-                }
-            }
-            sortOrder.Add(new SortOrder("score", SolrNet.Order.DESC));
-
-            var result = _solr.Query(
-                query,
-                new QueryOptions {
-                    StartOrCursor = startOrCursor,
-                    Rows = rows,
-                    Fields = _fieldNames,
-                    OrderBy = sortOrder,
-                    FilterQueries = filterQueries,
-                    Facet = new FacetParameters { Queries = facetQueries, Sort = false }
-                }
-            );
-
-            foreach (var filter in _context.Entity.Filter.Where(f => f.Type == "facet")) {
-                if (result.FacetFields.ContainsKey(filter.Field)) {
-                    var facet = result.FacetFields[filter.Field];
-                    var map = _context.Process.Maps.First(m => m.Name == filter.Map);
-                    foreach (var f in facet) {
-                        map.Items.Add(new MapItem { From = $"{f.Key} ({f.Value})", To = f.Key });
+            if (_context.Entity.Order.Any()) {
+                foreach (var orderBy in _context.Entity.Order) {
+                    if (_context.Entity.TryGetField(orderBy.Field, out var field)) {
+                        var name = field.SortField.ToLower();
+                        sortOrder.Add(new SortOrder(name, orderBy.Sort == "asc" ? Order.ASC : Order.DESC));
                     }
                 }
             }
+            sortOrder.Add(new SortOrder("score", Order.DESC));
 
-            if (result.NumFound <= 0)
-                yield break;
+            if (_context.Entity.IsPageRequest()) {
 
-            _context.Entity.Hits = result.NumFound;
-
-            foreach (var row in result.Select(x => DocToRow(_rowFactory.Create(), _fields, x))) {
-                ++_localCount;
-                yield return row;
-            }
-
-            // using cursor, solr 4.7+ (un-tested)
-            while (result.NextCursorMark != null) {
-                result = _solr.Query(
+                var page = _solr.Query(
                     query,
                     new QueryOptions {
-                        StartOrCursor = result.NextCursorMark,
-                        Rows = _context.Entity.ReadSize,
+                        StartOrCursor = new StartOrCursor.Start(_context.Entity.Page * _context.Entity.Size - _context.Entity.Size),
+                        Rows = _context.Entity.Size,
                         Fields = _fieldNames,
                         OrderBy = sortOrder,
                         FilterQueries = filterQueries,
@@ -165,33 +127,139 @@ namespace Transformalize.Providers.Solr {
                     }
                 );
 
-                foreach (var row in result.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
-                    ++_localCount;
+                TransferFacetsToMaps(page);
+                _context.Entity.Hits = page.NumFound;
+
+                foreach (var row in page.Select(x => DocToRow(_rowFactory.Create(), _fields, x))) {
+                    ++counter;
                     yield return row;
                 }
+
+                yield break;
             }
 
-            // traditional paging
-            if (_context.Entity.ReadSize == 0 || _localCount >= result.NumFound)
-                yield break;
+            var readSize = _context.Entity.ReadSize > 0 ? _context.Entity.ReadSize : 500;
+            var version = SolrVersionParser.ParseVersion(_context);
 
-            var pages = result.NumFound / _context.Entity.ReadSize;
-            for (var page = 1; page <= pages; page++) {
-                result = _solr.Query(
+            // using the cursor is more efficient then just paging through, so we do it if the version is greatest enough
+            if (version.Major > 4 || version.Major == 4 && version.Minor >= 7) {
+
+                string uniqueKey;
+                if (_context.Entity.GetAllFields().Any(f => !f.System && f.PrimaryKey)) {
+                    uniqueKey = _context.Entity.GetAllFields().First(f => !f.System && f.PrimaryKey).Name;
+                } else {
+                    var key = new SolrSchemaReader(_context.Connection, _solr).Read().Entities.First().GetAllFields().FirstOrDefault(f => f.PrimaryKey);
+                    if (key == null) {
+                        _context.Error($"Can't find unique key for {_context.Connection}.");
+                        yield break;
+                    }
+                    uniqueKey = key.Name;
+                    _context.Warn($"Retrieved uniqueKey {uniqueKey} from SOLR.");
+                }
+
+                if (sortOrder.All(s => s.FieldName != uniqueKey)) {
+                    sortOrder.Add(new SortOrder(uniqueKey, Order.ASC));
+                }
+
+                var part = _solr.Query(
                     query,
                     new QueryOptions {
-                        StartOrCursor = new StartOrCursor.Start(page * _context.Entity.ReadSize),
-                        Rows = _context.Entity.ReadSize,
+                        StartOrCursor = new StartOrCursor.Cursor("*"),
+                        Rows = readSize,
                         Fields = _fieldNames,
                         OrderBy = sortOrder,
                         FilterQueries = filterQueries,
                         Facet = new FacetParameters { Queries = facetQueries, Sort = false }
                     }
+                );
+
+                TransferFacetsToMaps(part);
+                _context.Entity.Hits = part.NumFound;
+
+                foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
+                    ++counter;
+                    yield return row;
+                }
+
+                if (part.Count == part.NumFound) {
+                    yield break;
+                }
+
+                while (counter < part.NumFound) {
+                    part = _solr.Query(
+                        query,
+                        new QueryOptions {
+                            StartOrCursor = part.NextCursorMark,
+                            Rows = readSize,
+                            Fields = _fieldNames,
+                            OrderBy = sortOrder,
+                            FilterQueries = filterQueries,
+                            Facet = new FacetParameters { Queries = facetQueries, Sort = false }
+                        }
                     );
 
-                foreach (var row in result.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
-                    ++_localCount;
+                    foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
+                        ++counter;
+                        yield return row;
+                    }
+                }
+
+            } else {  // just naive paging through
+
+                var part = _solr.Query(
+                    query,
+                    new QueryOptions {
+                        Rows = readSize,
+                        Fields = _fieldNames,
+                        OrderBy = sortOrder,
+                        FilterQueries = filterQueries,
+                        Facet = new FacetParameters { Queries = facetQueries, Sort = false }
+                    }
+                );
+
+                foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
+                    ++counter;
                     yield return row;
+                }
+
+                TransferFacetsToMaps(part);
+                _context.Entity.Hits = part.NumFound;
+
+                if (part.Count == part.NumFound) {
+                    yield break;
+                }
+
+                // tradition paging 
+                var pages = part.NumFound / readSize;
+                for (var p = 1; p <= pages; p++) {
+                    part = _solr.Query(
+                        query,
+                        new QueryOptions {
+                            StartOrCursor = new StartOrCursor.Start(p * readSize),
+                            Rows = readSize,
+                            Fields = _fieldNames,
+                            OrderBy = sortOrder,
+                            FilterQueries = filterQueries,
+                            Facet = new FacetParameters { Queries = facetQueries, Sort = false }
+                        }
+                    );
+
+                    foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
+                        ++counter;
+                        yield return row;
+                    }
+                }
+            }
+        }
+
+        private void TransferFacetsToMaps(AbstractSolrQueryResults<Dictionary<string, object>> result) {
+            foreach (var filter in _context.Entity.Filter.Where(f => f.Type == "facet")) {
+                if (result.FacetFields.ContainsKey(filter.Field)) {
+                    var facet = result.FacetFields[filter.Field];
+                    var map = _context.Process.Maps.First(m => m.Name == filter.Map);
+                    foreach (var f in facet) {
+                        map.Items.Add(new MapItem { From = $"{f.Key} ({f.Value})", To = f.Key });
+                    }
                 }
             }
         }
@@ -205,7 +273,7 @@ namespace Transformalize.Providers.Solr {
             return row;
         }
 
-        IEnumerable<string> Terms(string value, string delimiter = " ") {
+        private static IEnumerable<string> Terms(string value, string delimiter = " ") {
 
             var processedValue = value.Trim(delimiter.ToCharArray());
 

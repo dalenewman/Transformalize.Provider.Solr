@@ -15,9 +15,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
+using SolrNet;
 using System.Collections.Generic;
 using System.Linq;
-using SolrNet;
 using Transformalize.Configuration;
 using Transformalize.Contracts;
 
@@ -31,15 +31,16 @@ namespace Transformalize.Providers.Solr {
             _solr = solr;
         }
 
-        private IEnumerable<Field> GetFields()
-        {
+        private IEnumerable<Field> GetFields() {
             string type;
             var s = _solr.GetSchema(_c.SchemaFileName);
             var typeSet = Constants.TypeSet();
+
             foreach (var field in s.SolrFields.Where(f => f.IsStored)) {
                 type = field.Type.Name.ToLower();
-                yield return new Field { Name = field.Name, Type = typeSet.Contains(type) ? type : "string" };
+                yield return new Field { Name = field.Name, Type = typeSet.Contains(type) ? type : "string", PrimaryKey = field.Name == s.UniqueKey};
             }
+
             foreach (var field in s.SolrCopyFields) {
                 var d = s.FindSolrFieldByName(field.Destination);
                 type = d.Type.Name.ToLower();

@@ -102,7 +102,7 @@ namespace IntegrationTests {
         public void Write621() {
             const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='1000' />
+    <add name='Size' type='int' value='100000' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
@@ -111,6 +111,7 @@ namespace IntegrationTests {
   <entities>
     <add name='Contact' size='@[Size]'>
       <fields>
+        <add name='Identity' type='int' primary-key='true' />
         <add name='FirstName' />
         <add name='LastName' />
         <add name='Stars' type='byte' min='1' max='5' />
@@ -127,16 +128,51 @@ namespace IntegrationTests {
                     var controller = inner.Resolve<IProcessController>();
                     controller.Execute();
 
-                    Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
+                    Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
                 }
             }
         }
 
         [TestMethod]
-        public void Read621() {
-            const string xml = @"<add name='TestProcess'>
+        public void Read621FastPaging() {
+            const string xml = @"<add name='TestProcess' read-only='true'>
   <connections>
     <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='output' provider='internal' />
+  </connections>
+  <entities>
+    <add name='Contact'>
+      <fields>
+        <add name='identity' type='int' primary-key='true' output='false' />
+        <add name='firstname' />
+        <add name='lastname' />
+        <add name='stars' type='byte' />
+        <add name='reviewers' type='int' />
+      </fields>
+    </add>
+  </entities>
+</add>";
+            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
+                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+
+                    var process = inner.Resolve<Process>();
+
+                    var controller = inner.Resolve<IProcessController>();
+                    controller.Execute();
+                    var rows = process.Entities.First().Rows;
+
+                    Assert.AreEqual(100000, rows.Count);
+
+
+                }
+            }
+        }
+
+        [TestMethod]
+        public void Read621SlowPaging() {
+            const string xml = @"<add name='TestProcess' read-only='true'>
+  <connections>
+    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' version='4.6' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
@@ -159,7 +195,7 @@ namespace IntegrationTests {
                     controller.Execute();
                     var rows = process.Entities.First().Rows;
 
-                    Assert.AreEqual(1000, rows.Count);
+                    Assert.AreEqual(100000, rows.Count);
 
 
                 }
