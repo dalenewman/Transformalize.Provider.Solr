@@ -16,9 +16,9 @@
 // limitations under the License.
 #endregion
 
-using System.Linq;
 using Autofac;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 using Transformalize.Configuration;
 using Transformalize.Containers.Autofac;
 using Transformalize.Contracts;
@@ -28,12 +28,12 @@ using Transformalize.Providers.Solr.Autofac;
 
 namespace IntegrationTests {
 
-    [TestClass]
-    public class Test {
+   [TestClass]
+   public class Test {
 
-        [TestMethod]
-        public void Write750() {
-            const string xml = @"<add name='TestProcess' mode='init'>
+      [TestMethod]
+      public void Write750() {
+         const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
     <add name='Size' type='int' value='1000' />
   </parameters>
@@ -52,22 +52,22 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
-                    var process = inner.Resolve<Process>();
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
 
-                    var controller = inner.Resolve<IProcessController>();
-                    controller.Execute();
-
-                    Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
-                }
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
             }
-        }
+         }
+      }
 
-        [TestMethod]
-        public void Read750() {
-            const string xml = @"<add name='TestProcess'>
+      [TestMethod]
+      public void Read750() {
+         const string xml = @"<add name='TestProcess'>
   <connections>
     <add name='input' provider='solr' core='bogus' server='localhost' folder='cores' path='solr' port='8983' />
     <add name='output' provider='internal' />
@@ -83,24 +83,24 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
-                    var process = inner.Resolve<Process>();
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
+               var rows = process.Entities.First().Rows;
 
-                    var controller = inner.Resolve<IProcessController>();
-                    controller.Execute();
-                    var rows = process.Entities.First().Rows;
+               Assert.AreEqual(1000, rows.Count);
 
-                    Assert.AreEqual(1000, rows.Count);
-
-                }
             }
-        }
+         }
+      }
 
-        [TestMethod]
-        public void Write621() {
-            const string xml = @"<add name='TestProcess' mode='init'>
+      [TestMethod]
+      public void Write621() {
+         const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
     <add name='Size' type='int' value='100000' />
   </parameters>
@@ -120,22 +120,22 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
-                    var process = inner.Resolve<Process>();
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
 
-                    var controller = inner.Resolve<IProcessController>();
-                    controller.Execute();
-
-                    Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
-                }
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
             }
-        }
+         }
+      }
 
-        [TestMethod]
-        public void Read621FastPaging() {
-            const string xml = @"<add name='TestProcess' read-only='true'>
+      [TestMethod]
+      public void Read621FastPaging() {
+         const string xml = @"<add name='TestProcess' read-only='true'>
   <connections>
     <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
     <add name='output' provider='internal' />
@@ -152,25 +152,25 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
-                    var process = inner.Resolve<Process>();
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
+               var rows = process.Entities.First().Rows;
 
-                    var controller = inner.Resolve<IProcessController>();
-                    controller.Execute();
-                    var rows = process.Entities.First().Rows;
-
-                    Assert.AreEqual(100000, rows.Count);
+               Assert.AreEqual(100000, rows.Count);
 
 
-                }
             }
-        }
+         }
+      }
 
-        [TestMethod]
-        public void Read621SlowPaging() {
-            const string xml = @"<add name='TestProcess' read-only='true'>
+      [TestMethod]
+      public void Read621SlowPaging() {
+         const string xml = @"<add name='TestProcess' read-only='true'>
   <connections>
     <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' version='4.6' />
     <add name='output' provider='internal' />
@@ -186,20 +186,20 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-            using (var outer = new ConfigurationContainer().CreateScope(xml)) {
-                using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(outer, new ConsoleLogger(LogLevel.Debug))) {
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
-                    var process = inner.Resolve<Process>();
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
+               var rows = process.Entities.First().Rows;
 
-                    var controller = inner.Resolve<IProcessController>();
-                    controller.Execute();
-                    var rows = process.Entities.First().Rows;
-
-                    Assert.AreEqual(100000, rows.Count);
+               Assert.AreEqual(100000, rows.Count);
 
 
-                }
             }
-        }
-    }
+         }
+      }
+   }
 }

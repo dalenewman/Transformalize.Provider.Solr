@@ -200,7 +200,7 @@ namespace Transformalize.Providers.Solr {
                     );
 
                     if (part.Count == 0) {
-                        break;
+                        yield break;
                     }
 
                     foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
@@ -209,7 +209,7 @@ namespace Transformalize.Providers.Solr {
                     }
                 }
 
-            } else {  // just naive paging through
+            } else {  // just regular paging
 
                 var part = _solr.Query(
                     query,
@@ -222,16 +222,16 @@ namespace Transformalize.Providers.Solr {
                     }
                 );
 
-                foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
-                    ++counter;
-                    yield return row;
-                }
-
                 TransferFacetsToMaps(part);
                 _context.Entity.Hits = part.NumFound;
 
                 if (part.Count == part.NumFound) {
                     yield break;
+                }
+
+                foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
+                    ++counter;
+                    yield return row;
                 }
 
                 // tradition paging 
@@ -248,6 +248,10 @@ namespace Transformalize.Providers.Solr {
                             Facet = new FacetParameters { Queries = facetQueries, Sort = false }
                         }
                     );
+
+                    if (part.Count == 0) {
+                        yield break;
+                    }
 
                     foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
                         ++counter;
