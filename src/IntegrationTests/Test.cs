@@ -201,5 +201,41 @@ namespace IntegrationTests {
             }
          }
       }
+
+      [TestMethod]
+      public void ReadWithExpression() {
+         const string xml = @"<add name='TestProcess'>
+  <connections>
+    <add name='input' provider='solr' core='bogus' server='localhost' folder='cores' path='solr' port='8983' version='6.2.1' />
+    <add name='output' provider='internal' />
+  </connections>
+  <entities>
+    <add name='Contact'>
+      <filter>
+         <add expression='firstname:Justin AND lastname:K*' type='search' />
+      </filter>
+      <fields>
+        <add name='firstname' />
+        <add name='lastname' />
+        <add name='stars' type='byte' />
+        <add name='reviewers' type='int' />
+      </fields>
+    </add>
+  </entities>
+</add>";
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
+
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
+               var rows = process.Entities.First().Rows;
+
+               Assert.AreEqual(8, rows.Count);
+
+            }
+         }
+      }
    }
 }

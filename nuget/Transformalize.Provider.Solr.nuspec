@@ -2,14 +2,14 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr</id>
-    <version>0.5.0-beta</version>
+    <version>0.5.1-beta</version>
     <title>Transformalize Transform using SOLR</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
     <projectUrl>https://github.com/dalenewman/Transformalize.Provider.Solr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Transformalize Transform using SOLR</description>
-    <releaseNotes>bump to 0.5.0</releaseNotes>
+    <releaseNotes>simplify error message</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>etl</tags>
     <dependencies>
