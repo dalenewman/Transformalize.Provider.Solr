@@ -6,7 +6,7 @@ namespace Transformalize.Providers.Solr {
 
         public static Version ParseVersion(IConnectionContext context) {
             if (context.Connection.Version == Constants.DefaultSetting || context.Connection.Version == string.Empty) {
-                context.Warn("Defaulting to SOLR version 6.0");
+                context.Warn("Defaulting to SOLR version 6.0.0");
                 context.Connection.Version = "6.0.0";
             }
 

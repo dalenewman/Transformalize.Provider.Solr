@@ -246,16 +246,29 @@ namespace Transformalize.Providers.Solr {
 
          } else {  // just regular paging
 
-            var part = _solr.Query(
-                query,
-                new QueryOptions {
-                   Rows = readSize,
-                   Fields = _fieldNames,
-                   OrderBy = sortOrder,
-                   FilterQueries = filterQueries,
-                   Facet = new FacetParameters { Queries = facetQueries, Sort = false }
-                }
-            );
+            SolrQueryResults<Dictionary<string, object>> part;
+            try {
+               part = _solr.Query(
+                   query,
+                   new QueryOptions {
+                      Rows = readSize,
+                      Fields = _fieldNames,
+                      OrderBy = sortOrder,
+                      FilterQueries = filterQueries,
+                      Facet = new FacetParameters { Queries = facetQueries, Sort = false }
+                   }
+               );
+            } catch (SolrConnectionException ex) {
+
+               var msg = GetErrorMessage(ex.Message);
+               if (msg == null) {
+                  _context.Error(ex, ex.Message);
+               } else {
+                  _context.Error(msg);
+               }
+
+               yield break;
+            }
 
             TransferFacetsToMaps(part);
             _context.Entity.Hits = part.NumFound;

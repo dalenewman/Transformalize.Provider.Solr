@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr</id>
-    <version>0.5.1-beta</version>
+    <version>0.5.2-beta</version>
     <title>Transformalize Transform using SOLR</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
