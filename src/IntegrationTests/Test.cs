@@ -55,7 +55,7 @@ namespace IntegrationTests {
          var logger = new ConsoleLogger(LogLevel.Debug);
          using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
             var process = outer.Resolve<Process>();
-            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
@@ -102,11 +102,11 @@ namespace IntegrationTests {
       public void Write621() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='100000' />
+    <add name='Size' type='int' value='10000' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]'>
@@ -123,21 +123,57 @@ namespace IntegrationTests {
          var logger = new ConsoleLogger(LogLevel.Debug);
          using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
             var process = outer.Resolve<Process>();
-            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)10000);
             }
          }
       }
 
       [TestMethod]
+      public void WriteDates() {
+         const string xml = @"<add name='TestProcess' mode='init'>
+  <connections>
+    <add name='input' provider='internal' seed='1' />
+    <add name='output' provider='solr' core='dates' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' />
+  </connections>
+  <entities>
+    <add name='dates'>
+      <rows>
+         <add string='2019-05-02 13:00:00' date='2019-05-02 13:00:00' dateoffset='2019-05-02 13:00:00-04:00' datez='2019-05-02 13:00:00Z' />
+         <add string='2019-05-03 13:00:00' date='2019-05-03 13:00:00' dateoffset='2019-05-03 13:00:00-04:00' datez='2019-05-03 13:00:00Z' />
+      </rows>
+      <fields>
+        <add name='string' type='string' primary-key='true' />
+        <add name='date' type='datetime' />
+        <add name='dateoffset' type='datetime' />
+        <add name='datez' type='datetime' />
+      </fields>
+    </add>
+  </entities>
+</add>";
+         var logger = new ConsoleLogger(LogLevel.Debug);
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+            var process = outer.Resolve<Process>();
+            using (var inner = new Container(new SolrModule()).CreateScope(process, logger)) {
+
+               var controller = inner.Resolve<IProcessController>();
+               controller.Execute();
+
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)2);
+            }
+         }
+      }
+
+
+      [TestMethod]
       public void Read621FastPaging() {
          const string xml = @"<add name='TestProcess' read-only='true'>
   <connections>
-    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
@@ -155,13 +191,13 @@ namespace IntegrationTests {
          var logger = new ConsoleLogger(LogLevel.Debug);
          using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
             var process = outer.Resolve<Process>();
-            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(100000, rows.Count);
+               Assert.AreEqual(10000, rows.Count);
 
 
             }
@@ -172,7 +208,7 @@ namespace IntegrationTests {
       public void Read621SlowPaging() {
          const string xml = @"<add name='TestProcess' read-only='true'>
   <connections>
-    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' version='4.6' />
+    <add name='input' provider='solr' core='bogus' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' version='4.6' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
@@ -189,13 +225,13 @@ namespace IntegrationTests {
          var logger = new ConsoleLogger(LogLevel.Debug);
          using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
             var process = outer.Resolve<Process>();
-            using (var inner = new TestContainer(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
+            using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(100000, rows.Count);
+               Assert.AreEqual(10000, rows.Count);
 
 
             }
@@ -206,7 +242,7 @@ namespace IntegrationTests {
       public void ReadWithExpression() {
          const string xml = @"<add name='TestProcess'>
   <connections>
-    <add name='input' provider='solr' core='bogus' server='localhost' folder='cores' path='solr' port='8983' version='6.2.1' />
+    <add name='input' provider='solr' core='bogus' server='localhost' path='solr' port='8983' version='6.2.1' />
     <add name='output' provider='internal' />
   </connections>
   <entities>

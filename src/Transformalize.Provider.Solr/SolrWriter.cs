@@ -25,47 +25,46 @@ using Transformalize.Extensions;
 
 namespace Transformalize.Providers.Solr {
 
-    public class SolrWriter : IWrite {
+   public class SolrWriter : IWrite {
 
-        private readonly OutputContext _context;
-        readonly ISolrOperations<Dictionary<string, object>> _solr;
-        private readonly Field[] _fields;
+      private readonly OutputContext _context;
+      readonly ISolrOperations<Dictionary<string, object>> _solr;
+      private readonly Field[] _fields;
 
-        public SolrWriter(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
-            _context = context;
-            _solr = solr;
-            _fields = context.OutputFields.Where(f => f.Type != "byte[]").ToArray();
-        }
+      public SolrWriter(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
+         _context = context;
+         _solr = solr;
+         _fields = context.OutputFields.Where(f => f.Type != "byte[]").ToArray();
+      }
 
-        public void Write(IEnumerable<IRow> rows) {
-            var fullCount = 0;
+      public void Write(IEnumerable<IRow> rows) {
+         var fullCount = 0;
 
-
-            foreach (var part in rows.Partition(_context.Entity.InsertSize)) {
-                var batchCount = (uint)0;
-                var docs = new List<Dictionary<string, object>>();
-                foreach (var row in part) {
-                    batchCount++;
-                    fullCount++;
-                    docs.Add(_fields.ToDictionary(field => field.Alias.ToLower(), field => row[field]));
-                }
-                var response = _solr.AddRange(docs);
-
-                if (response.Status == 0) {
-                    var count = batchCount;
-                    _context.Debug(() => $"{count} to output");
-                } else {
-                    _context.Error("ah!");
-                }
+         foreach (var part in rows.Partition(_context.Entity.InsertSize)) {
+            var batchCount = (uint)0;
+            var docs = new List<Dictionary<string, object>>();
+            foreach (var row in part) {
+               batchCount++;
+               fullCount++;
+               docs.Add(_fields.ToDictionary(field => field.Alias.ToLower(), field => row[field]));
             }
+            var response = _solr.AddRange(docs);
 
-            _solr.Commit();
-            
-            if (fullCount <= 0)
-                return;
+            if (response.Status == 0) {
+               var count = batchCount;
+               _context.Debug(() => $"{count} to output");
+            } else {
+               _context.Error($"Couldn't add range of {docs.Count} document{docs.Count.Plural()} to SOLR.");
+            }
+         }
 
-            _context.Entity.Inserts += System.Convert.ToUInt32(fullCount);
-            _context.Info($"{fullCount} to output");
-        }
-    }
+         _solr.Commit();
+
+         if (fullCount <= 0)
+            return;
+
+         _context.Entity.Inserts += System.Convert.ToUInt32(fullCount);
+         _context.Info($"{fullCount} to output");
+      }
+   }
 }
