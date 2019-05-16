@@ -18,5 +18,6 @@ namespace Transformalize.Providers.Solr {
             context.Connection.Version = "6.0.0";
             return new Version(6, 0, 0, 0);
         }
-    }
+
+   }
 }

@@ -1,4 +1,9 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+﻿@using System
+@using Transformalize.Providers.Solr
+@model Transformalize.Providers.Solr.Autofac.SolrTemplateModel
+@{
+    Version version = SolrVersionParser.ParseVersion(Model.Context);
+}<?xml version="1.0" encoding="UTF-8" ?>
 <!--
  Licensed to the Apache Software Foundation (ASF) under one or more
  contributor license agreements.  See the NOTICE file distributed with
@@ -35,7 +40,7 @@
        that you fully re-index after changing this setting as it can
        affect both how text is indexed and queried.
   -->
-  <luceneMatchVersion>7.4.0</luceneMatchVersion>
+  <luceneMatchVersion>@version</luceneMatchVersion>
 
   <!-- <lib/> directives can be used to instruct Solr to load any Jars
        identified and use them to resolve any "plugins" specified in
@@ -298,21 +303,20 @@
          If the updateLog is enabled, then it's highly recommended to
          have some sort of hard autoCommit to limit the log size.
       -->
-    <autoCommit>
-      <maxTime>15000</maxTime>
-      <openSearcher>false</openSearcher>
-    </autoCommit>
+     <autoCommit>
+        <maxTime>60000</maxTime>
+        <openSearcher>false</openSearcher>
+     </autoCommit>
 
     <!-- softAutoCommit is like autoCommit except it causes a
          'soft' commit which only ensures that changes are visible
          but does not ensure that data is synced to disk.  This is
          faster and more near-realtime friendly than a hard commit.
       -->
-    <!--
-      <autoSoftCommit>
-        <maxTime>1000</maxTime>
-      </autoSoftCommit>
-     -->
+    
+      <!--<autoSoftCommit>
+        <maxTime>15000</maxTime>
+      </autoSoftCommit>-->
 
     <!-- Update Related Event Listeners
 

@@ -176,7 +176,8 @@ namespace Transformalize.Providers.Solr.Autofac {
                                         output,
                                         ctx.ResolveNamed<ISolrCoreAdmin>(output.Connection.Key),
                                         ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key),
-                                        new RazorTemplateEngine(ctx.ResolveNamed<IContext>(entity.Key), new Template { Name = output.Connection.Key, File = "files\\solr\\schema.cshtml" }, new FileReader())
+                                        new RazorTemplateEngine(ctx.ResolveNamed<OutputContext>(entity.Key), new Template { Name = output.Connection.Key, File = "files\\solr\\schema.cshtml" }, new FileReader()),
+                                        new RazorTemplateEngine(ctx.ResolveNamed<OutputContext>(entity.Key), new Template { Name = output.Connection.Key, File = "files\\solr\\solrconfig.cshtml" }, new FileReader())
                                     ) : new NullInitializer();
 
                                 return new SolrOutputController(
@@ -198,7 +199,7 @@ namespace Transformalize.Providers.Solr.Autofac {
 
                         switch (output.Connection.Provider) {
                             case Solr:
-                                return new SolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
+                                return new SolrWriter3(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
                             default:
                                 return new NullWriter(output);
                         }

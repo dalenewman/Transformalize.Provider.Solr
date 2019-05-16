@@ -29,14 +29,14 @@ using Transformalize.Contracts;
 namespace Transformalize.Providers.Solr.Autofac {
     public class RazorTemplateEngine : ITemplateEngine {
 
-        private readonly IContext _context;
+        private readonly IConnectionContext _context;
         private readonly Configuration.Template _template;
 
         // Using Cfg-NET's "Reader" to read content, files, or web addresses with possible parameters.
         private readonly IReader _templateReader;
         private readonly IRazorEngineService _service;
 
-        public RazorTemplateEngine(IContext context, Configuration.Template template, IReader templateReader) {
+        public RazorTemplateEngine(IConnectionContext context, Configuration.Template template, IReader templateReader) {
 
             _context = context;
             _template = template;
@@ -80,7 +80,7 @@ namespace Transformalize.Providers.Solr.Autofac {
 
             try {
                 _context.Debug(() => $"Compiling {_template.Name}.");
-                return _service.RunCompile(templateContent, _template.Name, typeof(SolrTemplateModel), new SolrTemplateModel { Process = _context.Process, Parameters = parameters });
+                return _service.RunCompile(templateContent, _template.Name, typeof(SolrTemplateModel), new SolrTemplateModel { Context = _context, Process = _context.Process, Parameters = parameters });
             } catch (TemplateCompilationException ex) {
                 _context.Error($"Error parsing template {_template.Name}.");
                 _context.Error($"There are {ex.CompilerErrors.Count} errors.");

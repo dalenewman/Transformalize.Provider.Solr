@@ -35,11 +35,11 @@ namespace IntegrationTests {
       public void Write750() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='1000' />
+    <add name='Size' type='int' value='100000' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' server='localhost' folder='cores' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' version='7.5.0' path='solr' port='8983' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]'>
@@ -60,7 +60,7 @@ namespace IntegrationTests {
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
             }
          }
       }
@@ -69,7 +69,7 @@ namespace IntegrationTests {
       public void Read750() {
          const string xml = @"<add name='TestProcess'>
   <connections>
-    <add name='input' provider='solr' core='bogus' server='localhost' folder='cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' path='solr' port='8983' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
@@ -92,7 +92,7 @@ namespace IntegrationTests {
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(1000, rows.Count);
+               Assert.AreEqual(100000, rows.Count);
 
             }
          }
@@ -102,14 +102,14 @@ namespace IntegrationTests {
       public void Write621() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='10000' />
+    <add name='Size' type='int' value='100000' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' folder='d:\java\solr-6.2.1\cores' path='solr' port='8983' version='6.2.1' />
   </connections>
   <entities>
-    <add name='Contact' size='@[Size]'>
+    <add name='Contact' size='@[Size]' insert-size='1000'>
       <fields>
         <add name='Identity' type='int' primary-key='true' />
         <add name='FirstName' />
@@ -128,7 +128,7 @@ namespace IntegrationTests {
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)10000);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
             }
          }
       }

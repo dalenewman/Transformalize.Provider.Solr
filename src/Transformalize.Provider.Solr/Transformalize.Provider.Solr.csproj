@@ -67,6 +67,8 @@
     <Compile Include="SolrOutputProvider.cs" />
     <Compile Include="SolrSchemaReader.cs" />
     <Compile Include="SolrVersionParser.cs" />
+    <Compile Include="SolrWriter3.cs" />
+    <Compile Include="SolrWriter2.cs" />
     <Compile Include="SolrWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -198,9 +200,9 @@
     <Content Include="files\solr\conf\protwords.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="files\solr\conf\solrconfig.xml">
+    <None Include="files\solr\solrconfig.cshtml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
     <Content Include="files\solr\conf\stopwords.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
