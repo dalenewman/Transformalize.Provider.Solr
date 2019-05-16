@@ -102,6 +102,17 @@ if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.dll" "%25f%25
 if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.pdb" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.Autofac.dll" "%25f%25"
 if exist %25f%25 copy /Y "$(TargetDir)Transformalize.Provider.Solr.Autofac.pdb" "%25f%25"
+
+set sf="$(SolutionDir)..\Transformalize\Pipeline.Command\files\solr"
+if exist %25sf%25 copy /Y "$(TargetDir)\files\solr\*.*" "%25sf%25"
+
+set scf="$(SolutionDir)..\Transformalize\Pipeline.Command\files\solr\conf"
+if exist %25sf%25 copy /Y "$(TargetDir)\files\solr\conf\*.*" "%25scf%25"
+
+set sclf="$(SolutionDir)..\Transformalize\Pipeline.Command\files\solr\conf\lang"
+if exist %25sf%25 copy /Y "$(TargetDir)\files\solr\conf\lang\*.*" "%25sclf%25"
+
+
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
