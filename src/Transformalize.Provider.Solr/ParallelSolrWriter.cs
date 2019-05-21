@@ -28,7 +28,7 @@ using Transformalize.Extensions;
 
 namespace Transformalize.Providers.Solr {
 
-   public class SolrWriter3 : IWrite {
+   public class ParallelSolrWriter : IWrite {
 
       private readonly OutputContext _context;
       readonly ISolrOperations<Dictionary<string, object>> _solr;
@@ -36,7 +36,7 @@ namespace Transformalize.Providers.Solr {
       private int _fullCount;
       // private int _originalConnectionLimit;
 
-      public SolrWriter3(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
+      public ParallelSolrWriter(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
          _context = context;
          _solr = solr;
          _fields = context.OutputFields.Where(f => f.Type != "byte[]").ToArray();

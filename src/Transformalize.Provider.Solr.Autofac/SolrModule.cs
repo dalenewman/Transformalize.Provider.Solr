@@ -199,7 +199,7 @@ namespace Transformalize.Providers.Solr.Autofac {
 
                         switch (output.Connection.Provider) {
                             case Solr:
-                                return new SolrWriter3(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
+                                return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
                             default:
                                 return new NullWriter(output);
                         }
