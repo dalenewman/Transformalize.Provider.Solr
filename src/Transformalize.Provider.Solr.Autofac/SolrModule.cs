@@ -16,249 +16,32 @@
 // limitations under the License.
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
 using Autofac;
-using Autofac.Core;
-using Cfg.Net.Reader;
-using SolrNet;
-using SolrNet.Impl;
-using SolrNet.Impl.DocumentPropertyVisitors;
-using SolrNet.Impl.FacetQuerySerializers;
-using SolrNet.Impl.FieldParsers;
-using SolrNet.Impl.FieldSerializers;
-using SolrNet.Impl.QuerySerializers;
-using SolrNet.Impl.ResponseParsers;
-using SolrNet.Mapping;
-using SolrNet.Mapping.Validation;
-using SolrNet.Mapping.Validation.Rules;
-using SolrNet.Schema;
 using Transformalize.Configuration;
-using Transformalize.Context;
-using Transformalize.Contracts;
-using Transformalize.Extensions;
-using Transformalize.Nulls;
-using Transformalize.Providers.Solr.Ext;
 
 namespace Transformalize.Providers.Solr.Autofac {
-    public class SolrModule : Module {
+   public class SolrModule : Module {
+      
+      private Process _process;
 
-        private const string Solr = "solr";
+      public SolrModule() { }
+      public SolrModule(Process process) {
+         _process = process;
+      }
 
-        protected override void Load(ContainerBuilder builder) {
+      protected override void Load(ContainerBuilder builder) {
 
-            if (!builder.Properties.ContainsKey("Process")) {
-                return;
-            }
+         if (builder.Properties.ContainsKey("Process") && _process == null) {
+            _process = (Process)builder.Properties["Process"];
+         }
 
-            var process = (Process)builder.Properties["Process"];
+         if(_process == null) {
+            return;
+         }
 
-            // SolrNet
-            var mapper = new MemoizingMappingManager(new AttributesMappingManager());
-            builder.RegisterInstance(mapper).As<IReadOnlyMappingManager>();
-            builder.RegisterType<NullCache>().As<ISolrCache>();
-            builder.RegisterType<DefaultDocumentVisitor>().As<ISolrDocumentPropertyVisitor>();
-            builder.RegisterType<DefaultFieldParser>().As<ISolrFieldParser>();
-            builder.RegisterGeneric(typeof(SolrDocumentActivator<>)).As(typeof(ISolrDocumentActivator<>));
-            builder.RegisterGeneric(typeof(SolrDocumentResponseParser<>)).As(typeof(ISolrDocumentResponseParser<>));
-            builder.RegisterType<DefaultFieldSerializer>().As<ISolrFieldSerializer>();
-            builder.RegisterType<DefaultQuerySerializer>().As<ISolrQuerySerializer>();
-            builder.RegisterType<DefaultFacetQuerySerializer>().As<ISolrFacetQuerySerializer>();
-            builder.RegisterGeneric(typeof(DefaultResponseParser<>)).As(typeof(ISolrAbstractResponseParser<>));
+         new SolrBuilder(_process, builder).Build();
 
-            builder.RegisterType<HeaderResponseParser<string>>().As<ISolrHeaderResponseParser>();
-            builder.RegisterType<ExtractResponseParser>().As<ISolrExtractResponseParser>();
+      }
 
-            builder.RegisterType(typeof(MappedPropertiesIsInSolrSchemaRule)).As<IValidationRule>();
-            builder.RegisterType(typeof(RequiredFieldsAreMappedRule)).As<IValidationRule>();
-            builder.RegisterType(typeof(UniqueKeyMatchesMappingRule)).As<IValidationRule>();
-            builder.RegisterType(typeof(MultivaluedMappedToCollectionRule)).As<IValidationRule>();
-
-            builder.RegisterType<SolrSchemaParser>().As<ISolrSchemaParser>();
-            builder.RegisterGeneric(typeof(SolrMoreLikeThisHandlerQueryResultsParser<>)).As(typeof(ISolrMoreLikeThisHandlerQueryResultsParser<>));
-            builder.RegisterGeneric(typeof(SolrQueryExecuter<>)).As(typeof(ISolrQueryExecuter<>));
-            builder.RegisterGeneric(typeof(SolrDocumentSerializer<>)).As(typeof(ISolrDocumentSerializer<>));
-            builder.RegisterType<SolrDIHStatusParser>().As<ISolrDIHStatusParser>();
-            builder.RegisterType<MappingValidator>().As<IMappingValidator>();
-            builder.RegisterType<SolrDictionarySerializer>().As<ISolrDocumentSerializer<Dictionary<string, object>>>();
-            builder.RegisterType<SolrDictionaryDocumentResponseParser>().As<ISolrDocumentResponseParser<Dictionary<string, object>>>();
-
-            //MAPS
-            foreach (var map in process.Maps.Where(m => m.Connection != string.Empty && m.Query != string.Empty)) {
-                var connection = process.Connections.First(c => c.Name == map.Connection);
-                if (connection != null && connection.Provider == Solr) {
-                    builder.Register<IMapReader>(ctx => new DefaultMapReader()).Named<IMapReader>(map.Name);
-                }
-            }
-
-            // connections
-            foreach (var connection in process.Connections.Where(c => c.Provider.In(Solr))) {
-
-                connection.Url = connection.BuildSolrUrl();
-                RegisterCore(builder, connection);
-
-                builder.Register<ISchemaReader>(ctx => {
-                    
-                    var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(connection.Key);
-                    return new SolrSchemaReader(connection, solr);
-                }).Named<ISchemaReader>(connection.Key);
-            }
-
-            // entity input
-            foreach (var entity in process.Entities.Where(e => process.Connections.First(c => c.Name == e.Connection).Provider == Solr)) {
-
-                builder.Register<IInputProvider>(ctx => {
-                    var input = ctx.ResolveNamed<InputContext>(entity.Key);
-                    switch (input.Connection.Provider) {
-                        case Solr:
-                            return new SolrInputProvider(input, ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key));
-                        default:
-                            return new NullInputProvider();
-                    }
-                }).Named<IInputProvider>(entity.Key);
-
-                // INPUT READER
-                builder.Register<IRead>(ctx => {
-                    var input = ctx.ResolveNamed<InputContext>(entity.Key);
-                    var rowFactory = ctx.ResolveNamed<IRowFactory>(entity.Key, new NamedParameter("capacity", input.RowCapacity));
-
-                    switch (input.Connection.Provider) {
-                        case Solr:
-                            var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key);
-                            return new SolrInputReader(solr, input, input.InputFields, rowFactory);
-                        default:
-                            return new NullReader(input, false);
-                    }
-                }).Named<IRead>(entity.Key);
-
-            }
-
-            // entity output
-            if (process.Output().Provider == Solr) {
-
-                // PROCESS OUTPUT CONTROLLER
-                builder.Register<IOutputController>(ctx => new NullOutputController()).As<IOutputController>();
-
-                foreach (var entity in process.Entities) {
-
-                    // INPUT VALIDATOR
-                    builder.Register<IInputValidator>(ctx => {
-                        var input = ctx.ResolveNamed<InputContext>(entity.Key);
-                        return new SolrInputValidator(
-                            input,
-                            ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(input.Connection.Key)
-                        );
-                    }).Named<IInputValidator>(entity.Key);
-
-                    // UPDATER
-                    builder.Register<IUpdate>(ctx => {
-                        var output = ctx.ResolveNamed<OutputContext>(entity.Key);
-                        output.Debug(() => $"{output.Connection.Provider} does not denormalize.");
-                        return new NullMasterUpdater();
-                    }).Named<IUpdate>(entity.Key);
-
-                    // OUTPUT
-                    builder.Register<IOutputProvider>((ctx) => {
-                        var output = ctx.ResolveNamed<OutputContext>(entity.Key);
-                        var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(output.Connection.Key);
-                        return new SolrOutputProvider(output, solr);
-                    }).Named<IOutputProvider>(entity.Key);
-
-                    builder.Register<IOutputController>(ctx => {
-
-                        var output = ctx.ResolveNamed<OutputContext>(entity.Key);
-
-                        switch (output.Connection.Provider) {
-                            case Solr:
-                                var solr = ctx.ResolveNamed<ISolrReadOnlyOperations<Dictionary<string, object>>>(output.Connection.Key);
-
-                                var initializer = process.Mode == "init" ? (IInitializer)new SolrInitializer(
-                                        output,
-                                        ctx.ResolveNamed<ISolrCoreAdmin>(output.Connection.Key),
-                                        ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key),
-                                        new RazorTemplateEngine(ctx.ResolveNamed<OutputContext>(entity.Key), new Template { Name = output.Connection.Key, File = "files\\solr\\schema.cshtml" }, new FileReader()),
-                                        new RazorTemplateEngine(ctx.ResolveNamed<OutputContext>(entity.Key), new Template { Name = output.Connection.Key, File = "files\\solr\\solrconfig.cshtml" }, new FileReader())
-                                    ) : new NullInitializer();
-
-                                return new SolrOutputController(
-                                    output,
-                                    initializer,
-                                    ctx.ResolveNamed<IInputProvider>(entity.Key),
-                                    ctx.ResolveNamed<IOutputProvider>(entity.Key),
-                                    solr
-                                );
-                            default:
-                                return new NullOutputController();
-                        }
-
-                    }).Named<IOutputController>(entity.Key);
-
-                    // WRITER
-                    builder.Register<IWrite>(ctx => {
-                        var output = ctx.ResolveNamed<OutputContext>(entity.Key);
-
-                        switch (output.Connection.Provider) {
-                            case Solr:
-                                return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
-                            default:
-                                return new NullWriter(output);
-                        }
-                    }).Named<IWrite>(entity.Key);
-
-
-
-                }
-            }
-
-        }
-
-        private static void RegisterCore(ContainerBuilder builder, Connection connection) {
-            var url = connection.Url;
-            var key = connection.Key;
-
-            builder.Register((ctx => new SolrConnection(url))).Named<ISolrConnection>(key).InstancePerLifetimeScope();
-
-            builder.RegisterType<SolrQueryExecuter<Dictionary<string, object>>>()
-                .Named<ISolrQueryExecuter<Dictionary<string, object>>>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed(key, typeof (ISolrConnection))),
-            }).InstancePerLifetimeScope();
-
-            builder.RegisterType<SolrBasicServer<Dictionary<string, object>>>()
-                .Named<ISolrBasicOperations<Dictionary<string, object>>>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed<ISolrConnection>(key)),
-                    new ResolvedParameter((p, c) => p.Name == "queryExecuter", (p, c) => c.ResolveNamed<ISolrQueryExecuter<Dictionary<string,object>>>(connection.Key))
-                }).InstancePerLifetimeScope();
-
-            builder.RegisterType<SolrBasicServer<Dictionary<string, object>>>()
-                .Named<ISolrBasicReadOnlyOperations<Dictionary<string, object>>>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c) => p.Name == "connection", (p, c) => c.ResolveNamed<ISolrConnection>(key)),
-                    new ResolvedParameter((p, c) => p.Name == "queryExecuter", (p, c) => c.ResolveNamed<ISolrQueryExecuter<Dictionary<string,object>>>(key))
-                }).InstancePerLifetimeScope();
-
-            builder.RegisterType<SolrServer<Dictionary<string, object>>>()
-                .Named<ISolrOperations<Dictionary<string, object>>>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c) => p.Name == "basicServer", (p, c) => c.ResolveNamed<ISolrBasicOperations<Dictionary<string,object>>>(key)),
-                }).InstancePerLifetimeScope();
-
-            builder.RegisterType<SolrServer<Dictionary<string, object>>>()
-                .Named<ISolrReadOnlyOperations<Dictionary<string, object>>>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c) => p.Name == "basicServer", (p, c) => c.ResolveNamed<ISolrBasicOperations<Dictionary<string,object>>>(key)),
-                }).InstancePerLifetimeScope();
-
-            // modified url to not include the core
-            builder.RegisterType<SolrCoreAdmin>()
-                .Named<ISolrCoreAdmin>(key)
-                .WithParameters(new[] {
-                    new ResolvedParameter((p, c)=> p.Name == "connection", (p, c) => new SolrConnection(url.Substring(0, url.Length - connection.Core.Length - 1))),
-                    new ResolvedParameter((p, c)=> p.Name == "headerParser", (p, c) => c.Resolve<ISolrHeaderResponseParser>()),
-                    new ResolvedParameter((p, c)=> p.Name == "resultParser", (p, c) => new SolrStatusResponseParser())
-                })
-                .As<ISolrCoreAdmin>().InstancePerLifetimeScope();
-        }
-    }
+   }
 }
