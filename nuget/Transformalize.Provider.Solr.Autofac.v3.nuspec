@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr.Autofac.v3</id>
-    <version>0.6.7-beta</version>
+    <version>0.6.8-beta</version>
     <title>Transformalize Transform using Solr Autofac Module</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
@@ -14,7 +14,7 @@
     <tags>etl</tags>
     <dependencies>
       <group targetFramework="net462">
-        <dependency id="Autofac" version="4.6.2" />
+        <dependency id="Autofac" version="3.5.2" />
         <dependency id="Transformalize.Provider.Solr" version="0.6.7-beta" />
         <dependency id="RazorEngine" version="3.10.0" />
         <dependency id="Cfg-NET.Reader" version="0.3.3" />
