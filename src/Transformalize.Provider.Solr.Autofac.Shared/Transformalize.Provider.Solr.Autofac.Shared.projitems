@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>328b29df-c4b0-4fcf-ae0b-5eca92a9bd17</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Transformalize.Provider.Solr.Autofac.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)RazorTemplateEngine.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SolrBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SolrTemplateModel.cs" />
+  </ItemGroup>
+</Project>
