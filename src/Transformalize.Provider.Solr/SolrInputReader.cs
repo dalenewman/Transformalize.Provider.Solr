@@ -312,15 +312,20 @@ namespace Transformalize.Providers.Solr {
       private string GetErrorMessage(string xml) {
          XPathDocument doc = new XPathDocument(new StringReader(xml));
          var nagivator = doc.CreateNavigator();
-         var message = nagivator.SelectSingleNode("/response/lst[@name='error']/str[@name='msg']/text()").Value;
-         var index = message.IndexOf("Was expecting one of");
-         if (index > 0) {
-            message = message.Substring(0, index);
+         var maybe = nagivator.SelectSingleNode("/response/lst[@name='error']/str[@name='msg']/text()");
+         if(maybe != null && maybe.Value != null) {
+            var message = maybe.Value;
+            var index = message.IndexOf("Was expecting one of");
+            if (index > 0) {
+               message = message.Substring(0, index);
+            }
+            if (message.StartsWith("org.apache.solr.search.SyntaxError:")) {
+               message = message.Substring(35);
+            }
+            return message;
          }
-         if (message.StartsWith("org.apache.solr.search.SyntaxError:")) {
-            message = message.Substring(35);
-         }
-         return message;
+
+         return xml;
       }
 
       private void TransferFacetsToMaps(AbstractSolrQueryResults<Dictionary<string, object>> result) {

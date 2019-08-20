@@ -44,7 +44,7 @@ using Transformalize.Providers.Solr.Ext;
 namespace Transformalize.Providers.Solr.Autofac {
 
    public class SolrBuilder {
-      
+
       private const string Solr = "solr";
       private readonly Process _process;
       private readonly ContainerBuilder _builder;
@@ -199,7 +199,6 @@ namespace Transformalize.Providers.Solr.Autofac {
                // WRITER
                _builder.Register<IWrite>(ctx => {
                   var output = ctx.ResolveNamed<OutputContext>(entity.Key);
-
                   switch (output.Connection.Provider) {
                      case Solr:
                         return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
