@@ -201,7 +201,11 @@ namespace Transformalize.Providers.Solr.Autofac {
                   var output = ctx.ResolveNamed<OutputContext>(entity.Key);
                   switch (output.Connection.Provider) {
                      case Solr:
-                        return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
+                        if(output.Connection.MaxDegreeOfParallelism > 1) {
+                           return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
+                        } else {
+                           return new SolrWriter2(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
+                        }
                      default:
                         return new NullWriter(output);
                   }

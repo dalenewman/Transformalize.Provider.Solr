@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
+using System;
 using System.Collections.Generic;
 using System.Linq;
 // using System.Net;
@@ -34,12 +35,14 @@ namespace Transformalize.Providers.Solr {
       readonly ISolrOperations<Dictionary<string, object>> _solr;
       private readonly Field[] _fields;
       private int _fullCount;
+      private readonly ParallelOptions _options;
       // private int _originalConnectionLimit;
 
       public ParallelSolrWriter(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
          _context = context;
          _solr = solr;
          _fields = context.OutputFields.Where(f => f.Type != "byte[]").ToArray();
+         _options = new ParallelOptions() { MaxDegreeOfParallelism = context.Connection.MaxDegreeOfParallelism };
       }
 
       public void Write(IEnumerable<IRow> rows) {
@@ -47,22 +50,29 @@ namespace Transformalize.Providers.Solr {
          // _originalConnectionLimit = ServicePointManager.DefaultConnectionLimit;
          // ServicePointManager.DefaultConnectionLimit = 255;
 
-         Parallel.ForEach(rows.Partition(_context.Entity.InsertSize), part => {
-            var batchCount = (uint)0;
-            var docs = new List<Dictionary<string, object>>();
-            foreach (var row in part) {
-               batchCount++;
-               Interlocked.Increment(ref _fullCount);
-               docs.Add(_fields.ToDictionary(field => field.Alias.ToLower(), field => row[field]));
+         try {
+            Parallel.ForEach(rows.Partition(_context.Entity.InsertSize), _options, part => {
+               var batchCount = (uint)0;
+               var docs = new List<Dictionary<string, object>>();
+               foreach (var row in part) {
+                  batchCount++;
+                  Interlocked.Increment(ref _fullCount);
+                  docs.Add(_fields.ToDictionary(field => field.Alias.ToLower(), field => row[field]));
+               }
+               var response = _solr.AddRange(docs);
+               if (response.Status == 0) {
+                  var count = batchCount;
+                  _context.Debug(() => $"{count} to output");
+               } else {
+                  _context.Error($"Couldn't add range of {docs.Count} document{docs.Count.Plural()} to SOLR.");
+               }
+            });
+         } catch (AggregateException ex) {
+            foreach(var exception in ex.InnerExceptions) {
+               _context.Error(exception.Message);
             }
-            var response = _solr.AddRange(docs);
-            if (response.Status == 0) {
-               var count = batchCount;
-               _context.Debug(() => $"{count} to output");
-            } else {
-               _context.Error($"Couldn't add range of {docs.Count} document{docs.Count.Plural()} to SOLR.");
-            }
-         });
+            return;
+         }
 
          _solr.Commit();
 
