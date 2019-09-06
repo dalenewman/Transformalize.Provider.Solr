@@ -201,7 +201,7 @@ namespace Transformalize.Providers.Solr.Autofac {
                   var output = ctx.ResolveNamed<OutputContext>(entity.Key);
                   switch (output.Connection.Provider) {
                      case Solr:
-                        if(output.Connection.MaxDegreeOfParallelism > 1) {
+                        if (output.Connection.MaxDegreeOfParallelism > 1) {
                            return new ParallelSolrWriter(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
                         } else {
                            return new SolrWriter2(output, ctx.ResolveNamed<ISolrOperations<Dictionary<string, object>>>(output.Connection.Key));
@@ -218,7 +218,7 @@ namespace Transformalize.Providers.Solr.Autofac {
          var url = connection.Url;
          var key = connection.Key;
 
-         builder.Register((ctx => new SolrConnection(url))).Named<ISolrConnection>(key).InstancePerLifetimeScope();
+         builder.Register(ctx => new SolrConnection(url) { Timeout = connection.RequestTimeout * 1000 }).Named<ISolrConnection>(key).InstancePerLifetimeScope();
 
          builder.RegisterType<SolrQueryExecuter<Dictionary<string, object>>>()
              .Named<ISolrQueryExecuter<Dictionary<string, object>>>(key)
@@ -256,7 +256,7 @@ namespace Transformalize.Providers.Solr.Autofac {
          builder.RegisterType<SolrCoreAdmin>()
              .Named<ISolrCoreAdmin>(key)
              .WithParameters(new[] {
-                    new ResolvedParameter((p, c)=> p.Name == "connection", (p, c) => new SolrConnection(url.Substring(0, url.Length - connection.Core.Length - 1))),
+                    new ResolvedParameter((p, c)=> p.Name == "connection", (p, c) => new SolrConnection(url.Substring(0, url.Length - connection.Core.Length - 1)){ Timeout = connection.Timeout * 1000 }),
                     new ResolvedParameter((p, c)=> p.Name == "headerParser", (p, c) => c.Resolve<ISolrHeaderResponseParser>()),
                     new ResolvedParameter((p, c)=> p.Name == "resultParser", (p, c) => new SolrStatusResponseParser())
              })

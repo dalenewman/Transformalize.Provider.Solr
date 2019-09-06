@@ -99,13 +99,23 @@ namespace Transformalize.Providers.Solr {
          }
 
          if (cores.Any(c => c.Name == _context.Connection.Core)) {
-            _admin.Reload(_context.Connection.Core);
+
+            try {
+               _admin.Reload(_context.Connection.Core);
+            } catch (SolrConnectionException ex) {
+               _context.Warn("Unable to reload core");
+               _context.Warn(ex.Message);
+            }
+            
          } else {
+
             try {
                _admin.Create(_context.Connection.Core, _context.Connection.Core);
             } catch (SolrConnectionException ex) {
+               _context.Warn("Unable to create core");
                _context.Error(ex, ex.Message);
             }
+
          }
 
          _solr.Delete(SolrQuery.All);

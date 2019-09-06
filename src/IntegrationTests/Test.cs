@@ -18,6 +18,7 @@
 
 using Autofac;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Linq;
 using Transformalize.Configuration;
 using Transformalize.Containers.Autofac;
@@ -36,10 +37,11 @@ namespace IntegrationTests {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
     <add name='Size' type='int' value='100000' />
+    <add name='MDOP' type='int' value='2' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' version='7.5.0' path='solr' port='8983' />
+    <add name='output' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' version='7.5.0' path='solr' port='8983' max-degree-of-parallelism='@[MDOP]' request-timeout='100' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]'>
@@ -53,7 +55,7 @@ namespace IntegrationTests {
   </entities>
 </add>";
          var logger = new ConsoleLogger(LogLevel.Debug);
-         using (var outer = new ConfigurationContainer().CreateScope(xml, logger)) {
+         using (var outer = new ConfigurationContainer().CreateScope(xml, logger, new Dictionary<string, string>() { { "MDOP", "2" } })) {
             var process = outer.Resolve<Process>();
             using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
 

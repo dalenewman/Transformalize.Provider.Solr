@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 // using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,7 +37,7 @@ namespace Transformalize.Providers.Solr {
       private readonly Field[] _fields;
       private int _fullCount;
       private readonly ParallelOptions _options;
-      // private int _originalConnectionLimit;
+      private int _originalConnectionLimit;
 
       public ParallelSolrWriter(OutputContext context, ISolrOperations<Dictionary<string, object>> solr) {
          _context = context;
@@ -47,8 +48,8 @@ namespace Transformalize.Providers.Solr {
 
       public void Write(IEnumerable<IRow> rows) {
 
-         // _originalConnectionLimit = ServicePointManager.DefaultConnectionLimit;
-         // ServicePointManager.DefaultConnectionLimit = 255;
+         _originalConnectionLimit = ServicePointManager.DefaultConnectionLimit;
+         ServicePointManager.DefaultConnectionLimit = _context.Connection.MaxDegreeOfParallelism * 2;
 
          try {
             Parallel.ForEach(rows.Partition(_context.Entity.InsertSize), _options, part => {
@@ -70,13 +71,14 @@ namespace Transformalize.Providers.Solr {
          } catch (AggregateException ex) {
             foreach(var exception in ex.InnerExceptions) {
                _context.Error(exception.Message);
+               _context.Error(exception.StackTrace);
             }
             return;
          }
 
          _solr.Commit();
 
-         // ServicePointManager.DefaultConnectionLimit = _originalConnectionLimit;
+         ServicePointManager.DefaultConnectionLimit = _originalConnectionLimit;
 
          if (_fullCount <= 0)
             return;

@@ -1,8 +1,7 @@
 ### Overview
 
-This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet).  It is a plug-in compatible with Transformalize 0.3.7-beta.  This is tested on SOLR 6.2.1 and SOLR 7.4.0.
-
-Build the Autofac project and put it's output into Transformalize's *plugins* folder.
+This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet). 
+It's included with Transformalize (as a plugin).
 
 ### Write Usage
 
@@ -10,10 +9,18 @@ Build the Autofac project and put it's output into Transformalize's *plugins* fo
 <add name='TestProcess' mode='init'>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='output' 
+         provider='solr' 
+         core='bogus' 
+         folder='c:\java\solr-7.5.0\cores' 
+         path='solr' 
+         port='8983' 
+         version='7.5.0' 
+         max-degree-of-paralleism="2" 
+         request-timeout="120" />
   </connections>
   <entities>
-    <add name='Contact' size='1000'>
+    <add name='Contact' size='100000'>
       <fields>
         <add name='FirstName' />
         <add name='LastName' />
@@ -25,7 +32,7 @@ Build the Autofac project and put it's output into Transformalize's *plugins* fo
 </add>
 ```
 
-This writes 1000 rows of bogus data to a Solr 6 core at *c:\java\solr-6.2.1\cores\bogus*.
+This writes 100000 rows of bogus data to Solr.
 
 ### Read Usage
 
@@ -47,7 +54,7 @@ This writes 1000 rows of bogus data to a Solr 6 core at *c:\java\solr-6.2.1\core
 </add>
 ```
 
-This reads 10 rows of bogus data from a Solr 6 core at *c:\java\solr-6.2.1\cores\bogus*:
+This reads 10 rows of bogus data from Solr:
 
 <pre>
 <strong>firstname,lastname,stars,reviewers</strong>
@@ -64,6 +71,5 @@ Sophie,Hand,2,176</pre>
 
 ### Notes
 
-- Tested with Solr 6.
+- Tested with Solr 6 and 7.
 - Field names go into Solr as lower case.
-- Uses older SolrNet at *https://ci.appveyor.com/nuget/solrnet-022x5w7kmuba*.
