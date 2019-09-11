@@ -2,14 +2,14 @@
 <package>
   <metadata>
     <id>Transformalize.Provider.Solr.Autofac.v3</id>
-    <version>0.6.15-beta</version>
+    <version>0.6.16-beta</version>
     <title>Transformalize Transform using Solr Autofac Module</title>
     <authors>Dale Newman</authors>
     <owners>Dale Newman</owners>
     <projectUrl>https://github.com/dalenewman/Transformalize.Provider.Solr</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Transformalize Transform using Solr Autofac Module</description>
-    <releaseNotes>honor request timeout in connection (default is 60 seconds)</releaseNotes>
+    <releaseNotes>more cautious commits (try/catch, etc.)</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>etl</tags>
     <dependencies>

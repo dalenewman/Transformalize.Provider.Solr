@@ -36,7 +36,7 @@ namespace IntegrationTests {
       public void Write750() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='100000' />
+    <add name='Size' type='int' value='100001' />
     <add name='MDOP' type='int' value='2' />
   </parameters>
   <connections>
@@ -44,7 +44,7 @@ namespace IntegrationTests {
     <add name='output' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' version='7.5.0' path='solr' port='8983' max-degree-of-parallelism='@[MDOP]' request-timeout='100' />
   </connections>
   <entities>
-    <add name='Contact' size='@[Size]'>
+    <add name='Contact' size='@[Size]' insert-size='255'>
       <fields>
         <add name='FirstName' />
         <add name='LastName' />
@@ -54,7 +54,7 @@ namespace IntegrationTests {
     </add>
   </entities>
 </add>";
-         var logger = new ConsoleLogger(LogLevel.Debug);
+         var logger = new ConsoleLogger(LogLevel.Info);
          using (var outer = new ConfigurationContainer().CreateScope(xml, logger, new Dictionary<string, string>() { { "MDOP", "2" } })) {
             var process = outer.Resolve<Process>();
             using (var inner = new Container(new BogusModule(), new SolrModule()).CreateScope(process, logger)) {
@@ -62,7 +62,7 @@ namespace IntegrationTests {
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)100001);
             }
          }
       }

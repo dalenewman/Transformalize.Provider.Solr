@@ -15,9 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #endregion
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SolrNet;
+using SolrNet.Exceptions;
 using Transformalize.Configuration;
 using Transformalize.Context;
 using Transformalize.Contracts;
@@ -58,13 +60,20 @@ namespace Transformalize.Providers.Solr {
             }
          }
 
-         _solr.Commit();
+         if (fullCount > 0) {
 
-         if (fullCount <= 0)
-            return;
-
-         _context.Entity.Inserts += System.Convert.ToUInt32(fullCount);
-         _context.Info($"{fullCount} to output");
+            try {
+               var commit = _solr.Commit();
+               if (commit.Status == 0) {
+                  _context.Entity.Inserts += System.Convert.ToUInt32(fullCount);
+                  _context.Info($"Committed {fullCount} documents in {TimeSpan.FromMilliseconds(commit.QTime)}");
+               } else {
+                  _context.Error($"Failed to commit {fullCount} documents.  SOLR returned status {commit.Status}.");
+               }
+            } catch (SolrNetException ex) {
+               _context.Error($"Failed to commit {fullCount} documents. {ex.Message}");
+            }
+         }
       }
    }
 }

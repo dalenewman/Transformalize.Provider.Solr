@@ -23,6 +23,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using SolrNet;
+using SolrNet.Exceptions;
 using Transformalize.Configuration;
 using Transformalize.Context;
 using Transformalize.Contracts;
@@ -69,22 +70,30 @@ namespace Transformalize.Providers.Solr {
                }
             });
          } catch (AggregateException ex) {
-            foreach(var exception in ex.InnerExceptions) {
+            foreach (var exception in ex.InnerExceptions) {
                _context.Error(exception.Message);
                _context.Error(exception.StackTrace);
             }
             return;
          }
 
-         _solr.Commit();
-
          ServicePointManager.DefaultConnectionLimit = _originalConnectionLimit;
 
-         if (_fullCount <= 0)
-            return;
+         if (_fullCount > 0) {
 
-         _context.Entity.Inserts += System.Convert.ToUInt32(_fullCount);
-         _context.Info($"{_fullCount} to output");
+            try {
+               var commit = _solr.Commit();
+               if (commit.Status == 0) {
+                  _context.Entity.Inserts += System.Convert.ToUInt32(_fullCount);
+                  _context.Info($"Committed {_fullCount} documents in {TimeSpan.FromMilliseconds(commit.QTime)}");
+               } else {
+                  _context.Error($"Failed to commit {_fullCount} documents.  SOLR returned status {commit.Status}.");
+               }
+            } catch (SolrNetException ex) {
+               _context.Error($"Failed to commit {_fullCount} documents. {ex.Message}");
+            }
+         }
+
       }
    }
 }
