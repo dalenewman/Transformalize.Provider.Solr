@@ -36,7 +36,7 @@ namespace Transformalize.Providers.Solr {
       private readonly OutputContext _context;
       readonly ISolrOperations<Dictionary<string, object>> _solr;
       private readonly Field[] _fields;
-      private int _fullCount;
+      private int _count;
       private readonly ParallelOptions _options;
       private int _originalConnectionLimit;
 
@@ -54,18 +54,15 @@ namespace Transformalize.Providers.Solr {
 
          try {
             Parallel.ForEach(rows.Partition(_context.Entity.InsertSize), _options, part => {
-               var batchCount = (uint)0;
+
                var docs = new List<Dictionary<string, object>>();
                foreach (var row in part) {
-                  batchCount++;
-                  Interlocked.Increment(ref _fullCount);
+                  Interlocked.Increment(ref _count);
                   docs.Add(_fields.ToDictionary(field => field.Alias.ToLower(), field => row[field]));
                }
+
                var response = _solr.AddRange(docs);
-               if (response.Status == 0) {
-                  var count = batchCount;
-                  _context.Debug(() => $"{count} to output");
-               } else {
+               if (response.Status != 0) {
                   _context.Error($"Couldn't add range of {docs.Count} document{docs.Count.Plural()} to SOLR.");
                }
             });
@@ -79,21 +76,19 @@ namespace Transformalize.Providers.Solr {
 
          ServicePointManager.DefaultConnectionLimit = _originalConnectionLimit;
 
-         if (_fullCount > 0) {
-
+         if (_count > 0) {
             try {
                var commit = _solr.Commit();
                if (commit.Status == 0) {
-                  _context.Entity.Inserts += System.Convert.ToUInt32(_fullCount);
-                  _context.Info($"Committed {_fullCount} documents in {TimeSpan.FromMilliseconds(commit.QTime)}");
+                  _context.Entity.Inserts += Convert.ToUInt32(_count);
+                  _context.Info($"Committed {_count} documents in {TimeSpan.FromMilliseconds(commit.QTime)}");
                } else {
-                  _context.Error($"Failed to commit {_fullCount} documents.  SOLR returned status {commit.Status}.");
+                  _context.Error($"Failed to commit {_count} documents. SOLR returned status {commit.Status}.");
                }
             } catch (SolrNetException ex) {
-               _context.Error($"Failed to commit {_fullCount} documents. {ex.Message}");
+               _context.Error($"Failed to commit {_count} documents. {ex.Message}");
             }
          }
-
       }
    }
 }

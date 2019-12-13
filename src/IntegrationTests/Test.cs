@@ -36,7 +36,7 @@ namespace IntegrationTests {
       public void Write750() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='100001' />
+    <add name='Size' type='int' value='100000' />
     <add name='MDOP' type='int' value='2' />
   </parameters>
   <connections>
@@ -62,7 +62,7 @@ namespace IntegrationTests {
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)100001);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
             }
          }
       }
@@ -136,7 +136,7 @@ namespace IntegrationTests {
       }
 
       [TestMethod]
-      public void WriteDates() {
+      public void WriteDates621() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <connections>
     <add name='input' provider='internal' seed='1' />
@@ -199,7 +199,7 @@ namespace IntegrationTests {
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(10000, rows.Count);
+               Assert.AreEqual(100000, rows.Count);
 
 
             }
@@ -233,7 +233,7 @@ namespace IntegrationTests {
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(10000, rows.Count);
+               Assert.AreEqual(100000, rows.Count);
 
 
             }
@@ -241,7 +241,7 @@ namespace IntegrationTests {
       }
 
       [TestMethod]
-      public void ReadWithExpression() {
+      public void ReadWithExpression621() {
          const string xml = @"<add name='TestProcess'>
   <connections>
     <add name='input' provider='solr' core='bogus' server='localhost' path='solr' port='8983' version='6.2.1' />
