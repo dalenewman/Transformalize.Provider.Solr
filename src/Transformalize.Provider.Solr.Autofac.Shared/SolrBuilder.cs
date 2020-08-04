@@ -108,7 +108,7 @@ namespace Transformalize.Providers.Solr.Autofac {
          }
 
          // entity input
-         foreach (var entity in _process.Entities.Where(e => _process.Connections.First(c => c.Name == e.Connection).Provider == Solr)) {
+         foreach (var entity in _process.Entities.Where(e => _process.Connections.First(c => c.Name == e.Input).Provider == Solr)) {
 
             _builder.Register<IInputProvider>(ctx => {
                var input = ctx.ResolveNamed<InputContext>(entity.Key);
@@ -137,7 +137,7 @@ namespace Transformalize.Providers.Solr.Autofac {
          }
 
          // entity output
-         if (_process.Output().Provider == Solr) {
+         if (_process.GetOutputConnection().Provider == Solr) {
 
             // PROCESS OUTPUT CONTROLLER
             _builder.Register<IOutputController>(ctx => new NullOutputController()).As<IOutputController>();
