@@ -68,12 +68,16 @@ Harold,Blanda,4,125
 Willie,Heaney,5,342
 Sophie,Hand,2,176</pre>
 
+Or you could just look at it in SOLR admin:
+
+<img width="553" alt="image" src="https://user-images.githubusercontent.com/933086/186578326-e7dbaa1f-3906-4044-ac25-b6228f9cd198.png">
+
 ### Notes
 
 - Only tested with Solr 7.7.3 (using Docker) so far.
 - Field names go into Solr as lower case.
 
-### Docker Commands
+### ☀️ SOLR Docker Commands
 
 ```
 # windows
