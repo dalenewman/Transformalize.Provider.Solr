@@ -149,7 +149,7 @@ namespace Transformalize.Providers.Solr {
             }
 
             TransferFacetsToMaps(page);
-            _context.Entity.Hits = page.NumFound;
+            _context.Entity.Hits = page.NumFound > int.MaxValue ? int.MaxValue : (int) page.NumFound;
 
             foreach (var row in page.Select(x => DocToRow(_rowFactory.Create(), _fields, x))) {
                ++counter;
@@ -209,7 +209,7 @@ namespace Transformalize.Providers.Solr {
             }
 
             TransferFacetsToMaps(part);
-            _context.Entity.Hits = part.NumFound;
+            _context.Entity.Hits = part.NumFound > int.MaxValue ? int.MaxValue : (int)part.NumFound;
 
             foreach (var row in part.Select(r => DocToRow(_rowFactory.Create(), _fields, r))) {
                ++counter;
@@ -271,7 +271,8 @@ namespace Transformalize.Providers.Solr {
             }
 
             TransferFacetsToMaps(part);
-            _context.Entity.Hits = part.NumFound;
+            
+            _context.Entity.Hits = part.NumFound > int.MaxValue ? int.MaxValue : (int)part.NumFound;
 
             if (part.Count == part.NumFound) {
                yield break;

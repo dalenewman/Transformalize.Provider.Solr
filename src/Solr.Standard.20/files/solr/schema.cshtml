@@ -1,20 +1,20 @@
-@using System
-@using System.Linq
-@using Transformalize.Configuration
-@using Transformalize.Providers.Solr
-@model Transformalize.Providers.Solr.Autofac.SolrTemplateModel
 @{
-   var process = Model.Process;
-   Version version = SolrVersionParser.ParseVersion(Model.Context);
+    var process = Model.Process;
+    Version version = SolrVersionParser.ParseVersion(Model.Context);
 
-   var fields = process.GetSearchFields();
-   var primaryKey = process.Entities.First(e => e.IsMaster).GetPrimaryKey().First();
+    // error CS1977: Cannot use a lambda expression as an argument to a dynamically dispatched operation without first casting it to a delegate or expression tree type.
+    Field[] fields = process.GetSearchFields().ToArray();
+    Entity[] entities = process.Entities.ToArray();
+    SearchType[] searchTypes = process.SearchTypes.ToArray();
+    
+    var primaryKey = entities.First(e => e.IsMaster).GetPrimaryKey().First();
 }<schema name="example" version="1.5">
 
    <!-- generated from project configuration -->
    <fields>
+
       @foreach (Field field in fields) {
-         var searchType = process.SearchTypes.First(st => st.Name == field.SearchType);
+         var searchType = searchTypes.First(st => st.Name == field.SearchType);
          <field name="@field.Alias.ToLower()"
                 type="@(searchType.Analyzer == string.Empty ? field.Type : searchType.Analyzer)"
                 indexed="@(searchType.Index ? "true" : "false")"

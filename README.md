@@ -1,7 +1,6 @@
-### Overview
+﻿### Overview
 
-This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet). 
-It's included with Transformalize (as a plugin).
+This adds a `Solr` provider to Transformalize using [SolrNet](https://github.com/SolrNet/SolrNet).
 
 ### Write Usage
 
@@ -12,15 +11,15 @@ It's included with Transformalize (as a plugin).
     <add name='output' 
          provider='solr' 
          core='bogus' 
-         folder='c:\java\solr-7.5.0\cores' 
+         folder='c:\temp\mysolrhome' 
          path='solr' 
          port='8983' 
-         version='7.5.0' 
+         version='7.7.3' 
          max-degree-of-paralleism="2" 
          request-timeout="120" />
   </connections>
   <entities>
-    <add name='Contact' size='100000'>
+    <add name='Contact' size='1000'>
       <fields>
         <add name='FirstName' />
         <add name='LastName' />
@@ -32,14 +31,14 @@ It's included with Transformalize (as a plugin).
 </add>
 ```
 
-This writes 100000 rows of bogus data to Solr.
+This writes 1000 rows of bogus data to Solr.
 
 ### Read Usage
 
 ```xml
 <add name='TestProcess' >
   <connections>
-    <add name='input' provider='solr' core='bogus' folder='c:\java\solr-6.2.1\cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' folder='c:\temp\mysolrhome' path='solr' port='8983' />
   </connections>
   <entities>
     <add name='Contact' page='1' size='10'>
@@ -71,5 +70,16 @@ Sophie,Hand,2,176</pre>
 
 ### Notes
 
-- Tested with Solr 6 and 7.
+- Only tested with Solr 7.7.3 (using Docker) so far.
 - Field names go into Solr as lower case.
+
+### Docker Commands
+
+```
+# windows
+docker run -p 8983:8983 -v %cd%/mysolrhome:/mysolrhome -e SOLR_HOME=/mysolrhome -e INIT_SOLR_HOME=yes -t solr:7.7.3
+# linux
+docker run -p 8983:8983 -v $PWD/mysolrhome:/mysolrhome -e SOLR_HOME=/mysolrhome -e INIT_SOLR_HOME=yes -t solr:7.7.3
+```
+
+**Note**: I ran ☝️ from _c:\temp_ on Windows which is why `folder` is set to _c:\temp\mysolrhome_ above.

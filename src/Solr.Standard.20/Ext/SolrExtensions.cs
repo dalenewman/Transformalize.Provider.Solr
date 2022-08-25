@@ -55,7 +55,7 @@ namespace Transformalize.Providers.Solr.Ext {
                     Rows = 0,
                     Fields = new Collection<string>()
                 });
-            return result.NumFound;
+            return result.NumFound > int.MaxValue ? int.MaxValue : (int) result.NumFound;
         }
 
     }

@@ -6,8 +6,8 @@ namespace Transformalize.Providers.Solr {
 
         public static Version ParseVersion(IConnectionContext context) {
             if (context.Connection.Version == Constants.DefaultSetting || context.Connection.Version == string.Empty) {
-                context.Warn("Defaulting to SOLR version 6.0.0");
-                context.Connection.Version = "6.0.0";
+                context.Warn("Defaulting to SOLR version 7.7.3");
+                context.Connection.Version = "7.7.3";
             }
 
             if (Version.TryParse(context.Connection.Version, out var parsed)) {
@@ -15,8 +15,8 @@ namespace Transformalize.Providers.Solr {
             }
 
             context.Warn($"Unable to parse SOLR {context.Connection.Version}.");
-            context.Connection.Version = "6.0.0";
-            return new Version(6, 0, 0, 0);
+            context.Connection.Version = "7.7.3";
+            return new Version(7, 7, 3, 0);
         }
 
    }

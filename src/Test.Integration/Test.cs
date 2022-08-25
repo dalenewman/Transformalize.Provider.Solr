@@ -17,9 +17,6 @@
 #endregion
 
 using Autofac;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
 using Transformalize.Configuration;
 using Transformalize.Containers.Autofac;
 using Transformalize.Contracts;
@@ -33,15 +30,15 @@ namespace IntegrationTests {
    public class Test {
 
       [TestMethod]
-      public void Write750() {
+      public void Write773() {
          const string xml = @"<add name='TestProcess' mode='init'>
   <parameters>
-    <add name='Size' type='int' value='100000' />
+    <add name='Size' type='int' value='1000' />
     <add name='MDOP' type='int' value='2' />
   </parameters>
   <connections>
     <add name='input' provider='bogus' seed='1' />
-    <add name='output' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' version='7.5.0' path='solr' port='8983' max-degree-of-parallelism='@[MDOP]' request-timeout='100' />
+    <add name='output' provider='solr' core='bogus' server='localhost' folder='c:\temp\mysolrhome' version='7.7.3' path='solr' port='8983' max-degree-of-parallelism='@[MDOP]' request-timeout='100' />
   </connections>
   <entities>
     <add name='Contact' size='@[Size]' insert-size='255'>
@@ -62,16 +59,16 @@ namespace IntegrationTests {
                var controller = inner.Resolve<IProcessController>();
                controller.Execute();
 
-               Assert.AreEqual(process.Entities.First().Inserts, (uint)100000);
+               Assert.AreEqual(process.Entities.First().Inserts, (uint)1000);
             }
          }
       }
 
       [TestMethod]
-      public void Read750() {
+      public void Read773() {
          const string xml = @"<add name='TestProcess'>
   <connections>
-    <add name='input' provider='solr' core='bogus' server='localhost' folder='D:\Java\solr-7.5.0\cores' path='solr' port='8983' />
+    <add name='input' provider='solr' core='bogus' server='localhost' folder='c:\temp\mysolrhome' path='solr' port='8983' />
     <add name='output' provider='internal' />
   </connections>
   <entities>
@@ -94,7 +91,7 @@ namespace IntegrationTests {
                controller.Execute();
                var rows = process.Entities.First().Rows;
 
-               Assert.AreEqual(100000, rows.Count);
+               Assert.AreEqual(1000, rows.Count);
 
             }
          }
